@@ -75,11 +75,16 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-dashboard-wrapper">
-      <aside className="admin-sidebar">
+      <aside className="admin-sidebar shadow-sm rounded-3">
         <h3 className="admin-sidebar-header">Admin</h3>
         <ul className="admin-nav">
           {["dashboard", "jobs", "applications", "statistics", "settings"].map(menu => (
-            <li key={menu} className={`admin-nav-item ${activeMenu === menu ? "active" : ""}`} onClick={() => setActiveMenu(menu)}>
+            <li
+              key={menu}
+              className={`admin-nav-item ${activeMenu === menu ? "active" : ""}`}
+              onClick={() => setActiveMenu(menu)}
+              style={{ cursor: "pointer" }}
+            >
               {menu.charAt(0).toUpperCase() + menu.slice(1)}
             </li>
           ))}
@@ -98,14 +103,20 @@ export default function AdminDashboard() {
 
         {isLoading ? (
           <div className="spinner-container">
-            <div className="spinner-border text-primary" role="status"></div>
+            <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}></div>
           </div>
         ) : (
           <div>
             {activeMenu === "dashboard" && (
               <div className="dashboard-cards">
-                <div className="dashboard-card">Total Jobs: {jobs.length}</div>
-                <div className="dashboard-card">Applications: {applications.length}</div>
+                <div className="dashboard-card">
+                  <h5 className="mb-2">Total Jobs</h5>
+                  <h2>{jobs.length}</h2>
+                </div>
+                <div className="dashboard-card">
+                  <h5 className="mb-2">Applications</h5>
+                  <h2>{applications.length}</h2>
+                </div>
               </div>
             )}
 
@@ -116,10 +127,11 @@ export default function AdminDashboard() {
                   placeholder="Search Jobs..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="search-input"
+                  className="search-input mb-3"
+                  style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)" }}
                 />
                 <table className="admin-table">
-                  <thead>
+                  <thead className="table-light">
                     <tr>
                       <th>Title</th>
                       <th>Description</th>
@@ -132,7 +144,7 @@ export default function AdminDashboard() {
                     {filteredJobs.map(job => {
                       const applicantCount = applications.filter(a => a.jobId === job.id).length;
                       return (
-                        <tr key={job.id}>
+                        <tr key={job.id} className="align-middle">
                           <td>{editingJobId === job.id ? <input value={editedJob.title} onChange={e => setEditedJob({ ...editedJob, title: e.target.value })} /> : job.title}</td>
                           <td>{editingJobId === job.id ? <input value={editedJob.description} onChange={e => setEditedJob({ ...editedJob, description: e.target.value })} /> : job.description.substring(0, 40) + "..."}</td>
                           <td>{editingJobId === job.id ? <input type="datetime-local" value={editedJob.expiresAt} onChange={e => setEditedJob({ ...editedJob, expiresAt: e.target.value })} /> : new Date(job.expiresAt).toLocaleDateString()}</td>
@@ -140,14 +152,14 @@ export default function AdminDashboard() {
                           <td>
                             {editingJobId === job.id ? (
                               <>
-                                <button onClick={() => saveEditedJob(job.id)}>Save</button>
-                                <button onClick={cancelEditing}>Cancel</button>
+                                <button className="btn btn-success btn-sm me-1" onClick={() => saveEditedJob(job.id)}>Save</button>
+                                <button className="btn btn-secondary btn-sm" onClick={cancelEditing}>Cancel</button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => startEditing(job)}>Edit</button>
-                                <button onClick={() => exportApplicants(job.id, 'csv')}>CSV</button>
-                                <button onClick={() => exportApplicants(job.id, 'pdf')}>PDF</button>
+                                <button className="btn btn-outline-primary btn-sm me-1" onClick={() => startEditing(job)}>Edit</button>
+                                <button className="btn btn-outline-success btn-sm me-1" onClick={() => exportApplicants(job.id, 'csv')}>CSV</button>
+                                <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplicants(job.id, 'pdf')}>PDF</button>
                               </>
                             )}
                           </td>
@@ -160,8 +172,8 @@ export default function AdminDashboard() {
             )}
 
             {activeMenu !== "jobs" && activeMenu !== "dashboard" && (
-              <div className="admin-table-wrapper">
-                <h3>{activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)} Section Coming Soon...</h3>
+              <div className="admin-table-wrapper text-center">
+                <h3 className="text-muted">{activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)} Section Coming Soon...</h3>
               </div>
             )}
           </div>

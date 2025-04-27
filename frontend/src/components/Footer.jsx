@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
           {/* Copyright */}
           <p className="text-light mb-3 mb-md-0">
-            &copy; {new Date().getFullYear()} Your Company Name. All rights reserved.
+            &copy; {new Date().getFullYear()} Midgard. All rights reserved.
           </p>
           
           {/* Social Icons */}

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaHome, FaBriefcase, FaPhoneAlt, FaInfoCircle, FaLock, FaBars } from "react-icons/fa";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -15,22 +15,10 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-custom">
       <div className="container">
-        {/* Logo Section */}
+        {/* Animated Site Name */}
         <Link to="/" className="navbar-brand d-flex align-items-center">
-          <img
-            src="/Logo.png"
-            alt="Logo"
-            className="me-2"
-            style={{
-              height: "40px",
-              transition: "all 0.3s ease",
-              filter: "drop-shadow(0px 0px 5px rgba(255,255,255,0.3))"
-            }}
-            onMouseOver={(e) => e.target.style.filter = "drop-shadow(0px 0px 8px rgba(255,255,255,0.5))"}
-            onMouseOut={(e) => e.target.style.filter = "drop-shadow(0px 0px 5px rgba(255,255,255,0.3))"}
-          />
-          <span className="brand-text">
-            YourBrand
+          <span className="brand-text animated-brand">
+            Midgard
           </span>
         </Link>
 

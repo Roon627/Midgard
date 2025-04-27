@@ -21,20 +21,26 @@ import Footer from "./components/Footer"; // Import Footer Component
 function App() {
   return (
     <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/careers" element={<Careers />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/interview/:jobId" element={<Interview />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/submissions" element={<AdminSubmissions />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
-      </Routes>
-      <Footer /> {/* Add Footer at the bottom of every page */}
+      <div className="app-wrapper d-flex flex-column min-vh-100" style={{ backgroundColor: "#ffffff" }}>
+        <Navbar />
+        
+        <div className="flex-grow-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/interview/:jobId" element={<Interview />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/submissions" element={<AdminSubmissions />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+          </Routes>
+        </div>
+
+        <Footer /> {/* Always at bottom */}
+      </div>
     </Router>
   );
 }
