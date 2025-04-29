@@ -9,6 +9,8 @@ const db = require("./db");
 const adminRouter = require("./routes/admin");
 const jobsRouter = require("./routes/jobs");
 const submissionsRouter = require("./routes/submissions");
+const emailSettingsRouter = require('./routes/emailSettings');
+
 
 // Middleware
 app.use(cors());
@@ -54,6 +56,9 @@ app.get("/api/admin/status", (req, res) => {
     res.json({ admin: false });
   }
 });
+
+//Email Settings
+app.use('/api/email-settings', emailSettingsRouter);
 
 // Admin login route (for testing, remove for production)
 app.post("/api/admin/login", (req, res) => {

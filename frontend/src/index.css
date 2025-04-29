@@ -179,6 +179,10 @@ footer p {
 }
 
 /* Careers Page Styles */
+
+.career-page-wrapper {
+  background-color: #ffffff !important;
+}
 .careers-job-list {
   display: flex;
   flex-wrap: wrap;

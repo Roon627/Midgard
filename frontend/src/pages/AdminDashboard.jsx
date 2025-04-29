@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../data/api";
 import { exportToCsv, exportToPdf } from "../utils/exportUtils";
+import AdminSettings from "./AdminSettings"; 
+import Applications from "./Applications"; 
 import '../App.css';
 
 export default function AdminDashboard() {
@@ -12,10 +14,14 @@ export default function AdminDashboard() {
   const [showExpiredJobs, setShowExpiredJobs] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [newJob, setNewJob] = useState({ title: "", description: "", expiresAt: "" });
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (activeMenu === "jobs" || activeMenu === "dashboard" || activeMenu === "applications") {
+      fetchData();
+    }
+  }, [activeMenu]);
 
   const fetchData = async () => {
     try {
@@ -67,6 +73,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const createNewJob = async () => {
+    if (!newJob.title || !newJob.description || !newJob.expiresAt) {
+      alert("Please fill all fields.");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/jobs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newJob),
+      });
+      if (!res.ok) throw new Error("Failed to create job");
+
+      await fetchData();
+      setNewJob({ title: "", description: "", expiresAt: "" });
+      setShowAddForm(false);
+      alert("Job created successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Error creating job.");
+    }
+  };
+
   const exportApplicants = (jobId, format) => {
     const jobApplicants = applications.filter(app => app.jobId === jobId);
     if (format === 'csv') exportToCsv(jobApplicants, `job_${jobId}_applications.csv`);
@@ -78,7 +107,7 @@ export default function AdminDashboard() {
       <aside className="admin-sidebar shadow-sm rounded-3">
         <h3 className="admin-sidebar-header">Admin</h3>
         <ul className="admin-nav">
-          {["dashboard", "jobs", "applications", "statistics", "settings"].map(menu => (
+          {["dashboard", "jobs", "applications", "settings"].map(menu => (
             <li
               key={menu}
               className={`admin-nav-item ${activeMenu === menu ? "active" : ""}`}
@@ -92,16 +121,21 @@ export default function AdminDashboard() {
       </aside>
 
       <div className="admin-content">
-        <div className="admin-content-header">
+        <div className="admin-content-header d-flex justify-content-between align-items-center">
           <h2>{activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)}</h2>
           {activeMenu === "jobs" && (
-            <button onClick={toggleExpiredView} className="toggle-btn">
-              {showExpiredJobs ? "Show Active Jobs" : "Show Expired Jobs"}
-            </button>
+            <div className="d-flex gap-2">
+              <button onClick={toggleExpiredView} className="toggle-btn">
+                {showExpiredJobs ? "Show Active Jobs" : "Show Expired Jobs"}
+              </button>
+              <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary">
+                {showAddForm ? "Cancel" : "Add New Job"}
+              </button>
+            </div>
           )}
         </div>
 
-        {isLoading ? (
+        {isLoading && (activeMenu !== "settings") ? (
           <div className="spinner-container">
             <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}></div>
           </div>
@@ -122,6 +156,32 @@ export default function AdminDashboard() {
 
             {activeMenu === "jobs" && (
               <div className="admin-table-wrapper">
+                {showAddForm && (
+                  <div className="card p-3 mb-3">
+                    <h5>Add New Job</h5>
+                    <input
+                      type="text"
+                      className="form-control mb-2"
+                      placeholder="Job Title"
+                      value={newJob.title}
+                      onChange={(e) => setNewJob({ ...newJob, title: e.target.value })}
+                    />
+                    <textarea
+                      className="form-control mb-2"
+                      placeholder="Job Description"
+                      value={newJob.description}
+                      onChange={(e) => setNewJob({ ...newJob, description: e.target.value })}
+                      rows="3"
+                    ></textarea>
+                    <input
+                      type="datetime-local"
+                      className="form-control mb-2"
+                      value={newJob.expiresAt}
+                      onChange={(e) => setNewJob({ ...newJob, expiresAt: e.target.value })}
+                    />
+                    <button className="btn btn-success" onClick={createNewJob}>Submit</button>
+                  </div>
+                )}
                 <input
                   type="text"
                   placeholder="Search Jobs..."
@@ -171,9 +231,15 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {activeMenu !== "jobs" && activeMenu !== "dashboard" && (
-              <div className="admin-table-wrapper text-center">
-                <h3 className="text-muted">{activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)} Section Coming Soon...</h3>
+            {activeMenu === "applications" && (
+              <div className="admin-table-wrapper">
+                <Applications />
+              </div>
+            )}
+
+            {activeMenu === "settings" && (
+              <div className="admin-settings-wrapper">
+                <AdminSettings />
               </div>
             )}
           </div>

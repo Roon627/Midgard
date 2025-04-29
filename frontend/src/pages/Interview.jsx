@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { API_URL } from "../data/api";
-import { questionSets } from "../data/questions"; // Import the question sets
+import { questionSets } from "../data/questions";
 
 export default function Interview() {
   const { jobId } = useParams();
   const navigate = useNavigate();
 
-  // Basic User Information
   const [userInfo, setUserInfo] = useState({
     firstName: "",
     lastName: "",
@@ -15,43 +14,25 @@ export default function Interview() {
     currentlyWorking: "",
     email: "",
     phone: "",
+    nationalId: "", // ✅ Added National ID field
   });
 
-  // Interview State
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes timer
+  const [timeLeft, setTimeLeft] = useState(600);
   const [files, setFiles] = useState({});
-  const [started, setStarted] = useState(false); // Track interview status
+  const [started, setStarted] = useState(false);
   const [error, setError] = useState("");
   const [uploadDone, setUploadDone] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Shuffle function to randomize the questions
-  const shuffleArray = (array) => {
-    const arrayCopy = [...array]; // Create a copy to avoid mutating the original
-    for (let i = arrayCopy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arrayCopy[i], arrayCopy[j]] = [arrayCopy[j], arrayCopy[i]]; // Swap elements
-    }
-    return arrayCopy;
-  };
-
-  // Initialize questions when interview starts
   useEffect(() => {
     if (started) {
-      // Combine questions from all question sets
       const allQuestions = questionSets.flatMap(set => set.questions);
-      
-      // Shuffle and select 20 random questions
       const randomQuestions = shuffleArray(allQuestions).slice(0, 20);
-      
-      // Ensure we have questions before setting state
       if (randomQuestions.length > 0) {
         setQuestions(randomQuestions);
-        
-        // Initialize answers object with empty values
         const initialAnswers = {};
         randomQuestions.forEach((_, index) => {
           initialAnswers[index] = "";
@@ -63,21 +44,20 @@ export default function Interview() {
     }
   }, [started]);
 
-  // Timer effect
   useEffect(() => {
     if (!started || submitted || timeLeft <= 0) return;
-    
-    const timer = setInterval(() => setTimeLeft((t) => {
-      if (t <= 1) {
-        clearInterval(timer);
-        setSubmitted(true); // Auto-submit when time runs out
-        return 0;
-      }
-      return t - 1;
-    }), 1000);
-    
+    const timer = setInterval(() => setTimeLeft(t => (t <= 1 ? (clearInterval(timer), setSubmitted(true), 0) : t - 1)), 1000);
     return () => clearInterval(timer);
   }, [started, timeLeft, submitted]);
+
+  const shuffleArray = (array) => {
+    const arrayCopy = [...array];
+    for (let i = arrayCopy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arrayCopy[i], arrayCopy[j]] = [arrayCopy[j], arrayCopy[i]];
+    }
+    return arrayCopy;
+  };
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -94,83 +74,45 @@ export default function Interview() {
   };
 
   const handleStartInterview = () => {
-    // Combine firstName and lastName into a single 'name' field
-    const fullName = `${userInfo.firstName} ${userInfo.lastName}`;
-    
-    // Make sure nationality and other fields are being passed
-    const submissionData = {
-      jobId,
-      firstName: userInfo.firstName,
-      lastName: userInfo.lastName,
-      nationality: userInfo.nationality,
-      currentlyWorking: userInfo.currentlyWorking,
-      email: userInfo.email,
-      phone: userInfo.phone,
-      answers: answers,
-      documents: files,
-    };
-
-    const requiredFields = ['firstName', 'lastName', 'nationality', 'email'];
+    const requiredFields = ['firstName', 'lastName', 'nationality', 'email', 'nationalId'];
     const missingFields = requiredFields.filter(field => !userInfo[field]);
-    
+
     if (missingFields.length > 0) {
       setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
       return;
     }
 
     setStarted(true);
-    setError(""); // Clear error
+    setError("");
   };
 
   const handleUploadAndSubmit = async () => {
     const required = ["cv", "certificates", "idCard"];
     const missing = required.filter(r => !files[r]);
-    
+
     if (missing.length > 0) {
       setError(`Missing required documents: ${missing.join(', ')}`);
       return;
     }
 
-    const formData = new FormData();
-    Object.entries(files).forEach(([key, file]) => {
-      if (file) formData.append(key, file);
-    });
-
     try {
-      const uploadRes = await fetch(`${API_URL}/upload`, {
-        method: "POST",
-        body: formData,
-      });
+      const formData = new FormData();
+      formData.append('jobId', parseInt(jobId));
+      formData.append('name', `${userInfo.firstName} ${userInfo.lastName}`);
+      formData.append('email', userInfo.email);
+      formData.append('phoneNumber', userInfo.phone || '');
+      formData.append('nationalId', userInfo.nationalId || '');
+      formData.append('answers', JSON.stringify(Object.values(answers)));
 
-      // Check if the upload was successful
-      if (!uploadRes.ok) {
-        throw new Error(`Failed to upload documents: ${uploadRes.statusText}`);
-      }
+      if (files.cv) formData.append('resume', files.cv);
+      if (files.certificates) formData.append('certificates', files.certificates);
+      if (files.idCard) formData.append('id_card', files.idCard);
+      if (files.policeReport) formData.append('police_report', files.policeReport);
+      if (files.other) formData.append('additional_documents', files.other);
 
-      const uploaded = await uploadRes.json();
-      
-      // Check if files were successfully uploaded
-      if (!uploaded || !uploaded.uploaded) {
-        throw new Error('No files uploaded successfully.');
-      }
-
-      const docMap = {};
-      uploaded.uploaded.forEach(({ original, stored }) => {
-        docMap[original.split(".")[0].toLowerCase()] = stored;
-      });
-
-      const submission = {
-        jobId: parseInt(jobId),
-        answers: Object.values(answers),
-        documents: docMap,
-        userInfo,
-      };
-
-      // Send application data to the server
       const res = await fetch(`${API_URL}/submissions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submission),
+        method: 'POST',
+        body: formData,
       });
 
       if (!res.ok) {
@@ -179,11 +121,12 @@ export default function Interview() {
 
       setUploadDone(true);
     } catch (err) {
+      console.error(err);
       setError(err.message || "Failed to submit. Please try again.");
     }
   };
 
-  // Pre-interview form
+  // ========== PRE-INTERVIEW FORM ==========
   if (!started) {
     return (
       <div className="container py-5">
@@ -191,7 +134,10 @@ export default function Interview() {
           <div className="col-md-8 col-lg-6">
             <div className="card shadow-sm border-0">
               <div className="card-header bg-primary text-white p-4">
-                <h2 className="text-center mb-0">Start Your Interview</h2>
+                <h2 className="text-center mb-1">Let's Get to Know You!</h2>
+                <p className="text-center text-light small mt-1 mb-0">
+                  Please tell us a little about yourself before we begin.
+                </p> {/* ✅ Friendly subtitle */}
               </div>
               <div className="card-body p-4">
                 <div className="mb-4">
@@ -213,9 +159,10 @@ export default function Interview() {
                     ))}
                   </div>
                 </div>
-              
+
                 <form onSubmit={(e) => { e.preventDefault(); handleStartInterview(); }}>
                   <div className="row g-3">
+                    {/* First Name */}
                     <div className="col-md-6">
                       <label className="form-label">First Name*</label>
                       <input
@@ -227,6 +174,8 @@ export default function Interview() {
                         required
                       />
                     </div>
+
+                    {/* Last Name */}
                     <div className="col-md-6">
                       <label className="form-label">Last Name*</label>
                       <input
@@ -238,6 +187,8 @@ export default function Interview() {
                         required
                       />
                     </div>
+
+                    {/* Email */}
                     <div className="col-md-6">
                       <label className="form-label">Email Address*</label>
                       <input
@@ -249,6 +200,8 @@ export default function Interview() {
                         required
                       />
                     </div>
+
+                    {/* Phone */}
                     <div className="col-md-6">
                       <label className="form-label">Phone Number</label>
                       <input
@@ -259,6 +212,21 @@ export default function Interview() {
                         placeholder="Enter your phone number"
                       />
                     </div>
+
+                    {/* National ID */}
+                    <div className="col-md-6">
+                      <label className="form-label">National ID*</label>
+                      <input
+                        type="text"
+                        value={userInfo.nationalId}
+                        onChange={(e) => setUserInfo({ ...userInfo, nationalId: e.target.value })}
+                        className="form-control"
+                        placeholder="Enter your National ID"
+                        required
+                      />
+                    </div>
+
+                    {/* Nationality */}
                     <div className="col-md-6">
                       <label className="form-label">Nationality*</label>
                       <input
@@ -270,6 +238,8 @@ export default function Interview() {
                         required
                       />
                     </div>
+
+                    {/* Currently Working */}
                     <div className="col-md-6">
                       <label className="form-label">Currently Employed?</label>
                       <select
@@ -283,15 +253,15 @@ export default function Interview() {
                       </select>
                     </div>
                   </div>
-                  
+
                   {error && <div className="alert alert-danger mt-3">{error}</div>}
-                  
+
                   <div className="d-grid mt-4">
                     <button type="submit" className="btn btn-primary py-2">
                       Begin Interview
                     </button>
                   </div>
-                  
+
                   <div className="text-center mt-3">
                     <small className="text-muted">
                       You'll have 10 minutes to complete the interview once started.
