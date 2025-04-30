@@ -178,6 +178,23 @@ footer p {
   }
 }
 
+/*Home background */
+.under-construction-image {
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+@media (max-width: 576px) {
+  .under-construction-image {
+    max-width: 100%;
+  }
+}
+
+
+
 /* Careers Page Styles */
 
 .career-page-wrapper {

@@ -2,17 +2,16 @@ import React from "react";
 
 function Home() {
   return (
-    <div className="home-container">
-      <h1 className="text-center my-4"></h1>
-      <p className="text-center mb-4"></p>
-      
+    <div className="home-container text-center px-3">
+      <h1 className="my-4">Welcome to Our Portal</h1>
+      <p className="mb-4">We’re working hard to bring you something amazing!</p>
+
       {/* Under Construction Image */}
-      <div className="text-center">
+      <div className="image-wrapper">
         <img 
-          src="/under-construction.jpg"  // Image from the public folder
+          src="/under-construction.jpg"  // Public folder path
           alt="Under Construction"
-          className="img-fluid"  // Bootstrap class for responsiveness
-          style={{ maxWidth: "1024px", height: "auto" }}  // Optional styling for image size
+          className="under-construction-image"
         />
       </div>
     </div>
