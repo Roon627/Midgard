@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "../data/api";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -8,22 +9,37 @@ export default function Contact() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setStatus(null);
+    setError(null);
 
-    // Simulate submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setStatus("Your message has been sent successfully! We'll get back to you soon.");
+    try {
+      const res = await fetch(`${API_URL}/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) throw new Error("Failed to send message.");
+
+      const result = await res.json();
+      setStatus(result.message || "Your message has been sent successfully!");
       setFormData({ name: "", email: "", message: "" });
-    }, 2000);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -89,15 +105,21 @@ export default function Contact() {
               </div>
 
               <div className="d-grid gap-2">
-                <button type="submit" className="btn btn-lg" disabled={isSubmitting}>
+                <button type="submit" className="btn btn-lg btn-primary" disabled={isSubmitting}>
                   {isSubmitting ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </form>
 
+            {/* Feedback messages */}
             {status && (
-              <div className="mt-3 alert alert-success">
+              <div className="mt-3 alert alert-success text-center">
                 {status}
+              </div>
+            )}
+            {error && (
+              <div className="mt-3 alert alert-danger text-center">
+                {error}
               </div>
             )}
           </div>

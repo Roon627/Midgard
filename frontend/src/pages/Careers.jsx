@@ -13,7 +13,6 @@ export default function Careers() {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
@@ -32,12 +31,6 @@ export default function Careers() {
       });
   }, []);
 
-  // Filter jobs by search input
-  const filteredJobs = jobs.filter((job) =>
-    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // Timer calculation
   const getTimeRemaining = (expiryDate) => {
     if (!expiryDate) return { expired: true };
@@ -52,21 +45,24 @@ export default function Careers() {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    return {
-      days,
-      hours,
-      minutes,
-      seconds,
-      expired: false,
-    };
+    return { days, hours, minutes, seconds, expired: false };
   };
+
+  // Filter: hide expired + match search
+  const filteredJobs = jobs
+    .filter((job) => {
+      const { expired } = getTimeRemaining(job.expiresAt);
+      return !expired;
+    })
+    .filter((job) =>
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   return (
     <div className="career-page-wrapper" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <div className="container py-4" style={{ flex: "1 0 auto" }}>
-        <h1 className="text-center mb-4">
-          Explore Exciting Career Opportunities
-        </h1>
+        <h1 className="text-center mb-4">Explore Exciting Career Opportunities</h1>
 
         {/* Search Box */}
         <div className="row justify-content-center mb-4">
@@ -111,36 +107,34 @@ export default function Careers() {
               <div key={job.id} className="career-job-card">
                 <h5 className="text-center">{job.title}</h5>
                 <p className="text-muted small" style={{ minHeight: "60px" }}>
-                  {job.description.length > 120 ? `${job.description.substring(0, 120)}...` : job.description}
+                  {job.description.length > 120
+                    ? `${job.description.substring(0, 120)}...`
+                    : job.description}
                 </p>
 
                 {/* Countdown */}
                 <div className="my-3">
-                  {timeRemaining.expired ? (
-                    <div className="text-danger text-center fw-bold small">Expired</div>
-                  ) : (
-                    <div className="text-center">
-                      <div className="small text-muted mb-1">⏳ Time Remaining:</div>
-                      <div className="d-flex justify-content-center gap-2">
-                        <div className="bg-light rounded p-1 text-center">
-                          <div className="fw-bold">{timeRemaining.days}</div>
-                          <div className="small">days</div>
-                        </div>
-                        <div className="bg-light rounded p-1 text-center">
-                          <div className="fw-bold">{timeRemaining.hours}</div>
-                          <div className="small">hrs</div>
-                        </div>
-                        <div className="bg-light rounded p-1 text-center">
-                          <div className="fw-bold">{timeRemaining.minutes}</div>
-                          <div className="small">min</div>
-                        </div>
-                        <div className="bg-light rounded p-1 text-center">
-                          <div className="fw-bold">{timeRemaining.seconds}</div>
-                          <div className="small">sec</div>
-                        </div>
+                  <div className="text-center">
+                    <div className="small text-muted mb-1">⏳ Time Remaining:</div>
+                    <div className="d-flex justify-content-center gap-2">
+                      <div className="bg-light rounded p-1 text-center">
+                        <div className="fw-bold">{timeRemaining.days}</div>
+                        <div className="small">days</div>
+                      </div>
+                      <div className="bg-light rounded p-1 text-center">
+                        <div className="fw-bold">{timeRemaining.hours}</div>
+                        <div className="small">hrs</div>
+                      </div>
+                      <div className="bg-light rounded p-1 text-center">
+                        <div className="fw-bold">{timeRemaining.minutes}</div>
+                        <div className="small">min</div>
+                      </div>
+                      <div className="bg-light rounded p-1 text-center">
+                        <div className="fw-bold">{timeRemaining.seconds}</div>
+                        <div className="small">sec</div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Apply Now */}
