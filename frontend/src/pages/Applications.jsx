@@ -45,7 +45,7 @@ export default function Applications() {
     };
 
     if (format === "csv") exportToCsv([exportData], `application_${application.id}.csv`);
-    if (format === "pdf") exportToPdf([exportData], `application_${application.id}.pdf`);
+    if (format === "pdf") exportToPdf([exportData], `application_${application.name.replace(/\s+/g, '_')}_report.pdf`);
   };
 
   return (
@@ -124,14 +124,22 @@ export default function Applications() {
 
                 <h6 className="text-primary">Interview Answers</h6>
                 <div className="list-group">
-                  {selectedApp.answers.map((answer, index) => (
+                  {Array.isArray(selectedApp.answers) && selectedApp.answers.map((answer, index) => (
                     <div key={index} className="list-group-item">
-                      <strong>Q{index + 1}:</strong> {answer.question} <br />
-                      <span className="text-success"><strong>Your Answer:</strong> {answer.selected}</span><br />
-                      {answer.correctAnswer && (
-                        <span className="text-muted">
-                          <strong>Correct Answer:</strong> {answer.correctAnswer}
-                        </span>
+                      {typeof answer === "object" ? (
+                        <>
+                          <strong>Q{index + 1}:</strong> {answer.question || "Question not available"} <br />
+                          <span className="text-success"><strong>Candidate's Answer:</strong> {answer.selected || answer.answer || "—"}</span><br />
+                          {answer.correctAnswer && (
+                            <span className="text-muted">
+                              <strong>Correct Answer:</strong> {answer.correctAnswer}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <strong>Q{index + 1}:</strong> <span className="text-success">Candidate's Answer:</span> {answer}
+                        </>
                       )}
                     </div>
                   ))}
