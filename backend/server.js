@@ -13,13 +13,15 @@ const jobsRouter = require("./routes/jobs");
 const submissionsRouter = require("./routes/submissions");
 const emailSettingsRouter = require("./routes/emailSettings");
 
-// ✅ Cloudflare frontend URL (without /api)
-const allowedOrigin = "https://scanner-examine-flavor-promising.trycloudflare.com";
-
+//Cloudflare frontend URL (without /api)
 app.use(cors({
-  origin: allowedOrigin,
+  origin: "https://picked-defects-scary-future.trycloudflare.com",
   credentials: true
 }));
+//app.use(cors({
+ // origin: "http://localhost:5173",
+ // credentials: true
+//}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

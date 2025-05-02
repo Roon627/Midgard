@@ -354,7 +354,6 @@ button:hover {
   transform-origin: bottom left;
 }
 
-
 /* Sticky Footer */
 footer {
   margin-top: auto;
@@ -363,6 +362,20 @@ footer {
   padding: 1rem;
   text-align: center;
   font-size: 0.9rem;
+}
+
+/* Nationality Dropdown Styles */
+.z-index-dropdown {
+  z-index: 1000; /* Ensure dropdown appears above other elements */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add subtle shadow for depth */
+}
+
+.cursor-pointer {
+  cursor: pointer; /* Pointer cursor for clickable items */
+}
+
+.hover-bg-light:hover {
+  background-color: #f8f9fa; /* Light gray background on hover */
 }
 
 /* Responsive */

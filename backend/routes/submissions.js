@@ -9,7 +9,7 @@ const router = express.Router();
 // Setup multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Ensure uploads/ folder exists
+    cb(null, "uploads/");
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname);
@@ -18,32 +18,52 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Handle form submission with file uploads
+// Handle form submission with duplicate check
 router.post("/", upload.fields([
   { name: "resume", maxCount: 1 },
   { name: "certificates", maxCount: 1 },
   { name: "id_card", maxCount: 1 },
   { name: "police_report", maxCount: 1 },
   { name: "additional_documents", maxCount: 1 }
-]), (req, res) => {
+]), async (req, res) => {
   try {
-    const { jobId, name, nationalId, answers, email, phoneNumber } = req.body;
+    const { jobId, name, nationalId, passport, answers, email, phoneNumber } = req.body;
     const files = req.files;
 
     if (!jobId || !name || !answers) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Check for duplicate application
+    const identifier = nationalId || passport || '';
+    const idField = nationalId ? 'nationalId' : 'passport';
+
+    const existing = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT id FROM submissions WHERE jobId = ? AND ${idField} = ?`,
+        [jobId, identifier],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (existing) {
+      return res.status(400).json({ error: "You have already applied for this job using this ID or passport." });
+    }
+
     db.run(`
       INSERT INTO submissions
-      (jobId, name, email, phoneNumber, nationalId, answers, resumePath, certificatesPath, idCardPath, policeReportPath, additionalDocumentsPath)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (jobId, name, email, phoneNumber, nationalId, passport, answers, resumePath, certificatesPath, idCardPath, policeReportPath, additionalDocumentsPath)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         jobId,
         name,
         email || '',
         phoneNumber || '',
         nationalId || '',
+        passport || '',
         answers,
         files?.resume?.[0]?.path || '',
         files?.certificates?.[0]?.path || '',
@@ -76,14 +96,14 @@ router.post("/", upload.fields([
               const transporter = nodemailer.createTransport({
                 host: settings.smtp_host,
                 port: settings.smtp_port,
-                secure: settings.smtp_port === 465, // true for 465, false otherwise
+                secure: settings.smtp_port === 465,
                 auth: {
                   user: settings.smtp_username,
                   pass: settings.smtp_password,
                 },
               });
 
-              const lastName = name.split(" ").slice(-1)[0]; // Get last name safely
+              const lastName = name.split(" ").slice(-1)[0];
               let emailBody = settings.email_body
                 .replace("[LAST_NAME]", lastName)
                 .replace("[JOB_TITLE]", jobRow.title);
@@ -123,10 +143,34 @@ router.get("/", (req, res) => {
     res.json(
       rows.map((row) => ({
         ...row,
-        answers: JSON.parse(row.answers || '[]'), // Safely parse answers JSON
+        answers: JSON.parse(row.answers || '[]'),
       }))
     );
   });
+});
+
+// NEW: Check for existing application by ID/passport
+router.post("/check-application", (req, res) => {
+  const { jobId, identifierType, identifierValue } = req.body;
+
+  if (!jobId || !identifierType || !identifierValue) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const column = identifierType === "passport" ? "passport" : "nationalId";
+
+  db.get(
+    `SELECT id FROM submissions WHERE jobId = ? AND ${column} = ?`,
+    [jobId, identifierValue],
+    (err, row) => {
+      if (err) {
+        console.error("Error checking application:", err);
+        return res.status(500).json({ error: "Internal server error" });
+      }
+
+      return res.json({ exists: !!row });
+    }
+  );
 });
 
 module.exports = router;

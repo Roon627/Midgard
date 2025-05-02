@@ -5,7 +5,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: [
-      'scanner-examine-flavor-promising.trycloudflare.com'
-    ]
+      "picked-defects-scary-future.trycloudflare.com"
+    ],
+    proxy: {
+      '/api': {
+        target: 'https://domains-label-federal-relocation.trycloudflare.com',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   }
 });
