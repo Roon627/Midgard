@@ -29,6 +29,7 @@ export default function Interview() {
   const [islamicQuestions, setIslamicQuestions] = useState([]);
   const [personalityQuestions, setPersonalityQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [questionAnswerPairs, setQuestionAnswerPairs] = useState([]); // New state to store questions and answers
   const [submitted, setSubmitted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600);
   const [files, setFiles] = useState({});
@@ -38,7 +39,7 @@ export default function Interview() {
   const [currentStep, setCurrentStep] = useState(1);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [checkingApplication, setCheckingApplication] = useState(false);
-  
+
   // Add new state for ID validation
   const [idValidationInProgress, setIdValidationInProgress] = useState(false);
   const idValidationTimeoutRef = useRef(null);
@@ -49,7 +50,7 @@ export default function Interview() {
       setFilteredNationalities([]);
     } else {
       setFilteredNationalities(
-        nationalities.filter(nat => 
+        nationalities.filter(nat =>
           nat.toLowerCase().includes(nationalitySearch.toLowerCase())
         ).slice(0, 10)
       );
@@ -70,20 +71,33 @@ export default function Interview() {
       }));
       setPersonalityQuestions(shuffledPersonality);
 
-      // Initialize answers
+      // ✅ FIX: Combine questions
       const allQuestions = [...shuffledIslamic, ...shuffledPersonality];
+
+      // Initialize question-answer pairs
+      const initialPairs = allQuestions.map((q, index) => ({
+        question: q.question,
+        answer: "",
+        correctAnswer: q.correctAnswer || "",
+        type: index < shuffledIslamic.length ? "islamic" : "personality"
+      }));
+      setQuestionAnswerPairs(initialPairs);
+
+      // Initialize answers for input handling
       const initialAnswers = {};
       allQuestions.forEach((_, index) => {
         initialAnswers[index] = "";
       });
       setAnswers(initialAnswers);
-    }
-  }, [started, personalityOptions]);
+
+      setAnswers(initialAnswers);
+      }
+    }, [started]);
 
   // Timer countdown effect
   useEffect(() => {
     if (!started || submitted || timeLeft <= 0) return;
-    
+
     const timer = setInterval(() => {
       setTimeLeft(t => {
         if (t <= 1) {
@@ -94,7 +108,7 @@ export default function Interview() {
         return t - 1;
       });
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, [started, submitted, timeLeft]);
 
@@ -124,7 +138,12 @@ export default function Interview() {
   };
 
   const handleChange = (index, value) => {
-    setAnswers({ ...answers, [index]: value });
+    setAnswers(prev => ({ ...prev, [index]: value }));
+    setQuestionAnswerPairs(prev => {
+      const newPairs = [...prev];
+      newPairs[index] = { ...newPairs[index], answer: value };
+      return newPairs;
+    });
   };
 
   const handleFileChange = (e, key) => {
@@ -136,22 +155,22 @@ export default function Interview() {
     setFiles({ ...files, [key]: file });
     setError(""); // clear error on valid file
   };
-  
+
   // Enhanced check for previous application - now with debounce
   const checkPreviousApplication = async (identifierType, identifierValue, skipValidation = false) => {
     // Don't check if validation is skipped or value is empty
     if (skipValidation || !identifierValue) {
       return false;
     }
-    
+
     // For Maldivian ID specifically - verify it starts with 'A' before checking
     if (identifierType === 'nationalId' && (!identifierValue.startsWith('A') || identifierValue.length < 2)) {
       return false;
     }
-    
+
     setCheckingApplication(true);
     setError("");
-    
+
     try {
       const response = await fetch(`${API_URL}/submissions/check-application`, {
         method: 'POST',
@@ -164,9 +183,9 @@ export default function Interview() {
           identifierValue
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.exists) {
         setAlreadyApplied(true);
         setError("You have already applied for this position. You cannot apply again with the same ID.");
@@ -187,11 +206,11 @@ export default function Interview() {
   // Handle user input for ID/passport with debounced validation
   const handleIdentifierChange = (e, field) => {
     const value = e.target.value;
-    
+
     // Update state immediately
     setUserInfo({ ...userInfo, [field]: value });
     setAlreadyApplied(false);
-    
+
     // Clear previous timeout
     if (idValidationTimeoutRef.current) {
       clearTimeout(idValidationTimeoutRef.current);
@@ -202,10 +221,10 @@ export default function Interview() {
       setIdValidationInProgress(false);
       return;
     }
-    
+
     // Set validation in progress
     setIdValidationInProgress(true);
-    
+
     // Debounce the validation check (wait 500ms after typing stops)
     idValidationTimeoutRef.current = setTimeout(() => {
       const identifierType = field === 'nationalId' ? 'nationalId' : 'passport';
@@ -219,23 +238,23 @@ export default function Interview() {
       setError("You're currently offline. Please check your internet connection.");
       return;
     }
-  
+
     const isMaldivian = userInfo.nationality === "Maldives";
     const idFieldName = isMaldivian ? 'nationalId' : 'passport';
     const requiredFields = ['firstName', 'lastName', 'nationality', 'email', idFieldName];
     const missingFields = requiredFields.filter(field => !userInfo[field]);
-  
+
     if (missingFields.length > 0) {
       setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
       return;
     }
-    
+
     // Check if Maldivian ID starts with 'A'
     if (isMaldivian && (!userInfo.nationalId.startsWith('A') || userInfo.nationalId.length < 2)) {
       setError("For Maldivian citizens, ID must start with 'A' followed by your ID number.");
       return;
     }
-    
+
     // Do one final check for already applied
     if (alreadyApplied) {
       setError("You have already applied for this position. You cannot apply again with the same ID.");
@@ -245,16 +264,16 @@ export default function Interview() {
     // One more check to ensure there's no race condition
     const identifierType = isMaldivian ? 'nationalId' : 'passport';
     const identifierValue = isMaldivian ? userInfo.nationalId : userInfo.passport;
-    
+
     const hasApplied = await checkPreviousApplication(identifierType, identifierValue);
     if (hasApplied) {
       return;
     }
-  
+
     setCurrentStep(2);
     setError("");
   };
-  
+
   const handleDocumentSubmission = () => {
     const required = ["cv", "certificates", "idCard", "policeReport"];
     const missing = required.filter(r => !files[r]);
@@ -276,25 +295,36 @@ export default function Interview() {
       formData.append('name', `${userInfo.firstName} ${userInfo.lastName}`);
       formData.append('email', userInfo.email);
       formData.append('phoneNumber', userInfo.phone || '');
-      
+
       if (userInfo.nationality === "Maldives") {
         formData.append('nationalId', userInfo.nationalId || '');
       } else {
         formData.append('passport', userInfo.passport || '');
       }
 
-      // Map personality answers to points
-      const scoredAnswers = Object.entries(answers).map(([index, answer]) => {
-        const questionIndex = parseInt(index);
-        if (questionIndex < islamicQuestions.length) {
-          return answer; // Islamic answers are text
-        } else {
+      // Prepare question-answer pairs with scored personality answers
+      const submissionData = questionAnswerPairs.map((pair, index) => {
+        const answer = pair.answer;
+        const correct = pair.correctAnswer || "";
+        if (pair.type === "personality") {
           const option = personalityOptions.find(opt => opt.text === answer);
-          return option ? option.points : 0; // Convert to points
+          return {
+            question: pair.question,
+            answer,
+            correctAnswer: correct,
+            score: option ? option.points : 0
+          };
         }
+        return {
+          question: pair.question,
+          answer,
+          correctAnswer: correct,
+          score: null
+        };
       });
-      
-      formData.append('answers', JSON.stringify(scoredAnswers));
+
+
+      formData.append('questionAnswers', JSON.stringify(submissionData));
 
       if (files.cv) formData.append('resume', files.cv);
       if (files.certificates) formData.append('certificates', files.certificates);
@@ -342,8 +372,8 @@ export default function Interview() {
                 <p className="text-muted mb-4">
                   We'll review your application and get back to you soon. A confirmation email has been sent to your registered email address.
                 </p>
-                <button 
-                  onClick={() => navigate("/")} 
+                <button
+                  onClick={() => navigate("/")}
                   className="btn btn-outline-primary px-4 py-2"
                 >
                   Return to Home
@@ -373,10 +403,9 @@ export default function Interview() {
                   <div className="d-flex justify-content-between mb-3">
                     {[1, 2, 3].map((step) => (
                       <div key={step} className="text-center">
-                        <div 
-                          className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${
-                            currentStep === step ? 'bg-primary text-white' : 'bg-light'
-                          }`}
+                        <div
+                          className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${currentStep === step ? 'bg-primary text-white' : 'bg-light'
+                            }`}
                           style={{ width: '40px', height: '40px' }}
                         >
                           {step}
@@ -471,13 +500,13 @@ export default function Interview() {
                           disabled={alreadyApplied}
                         />
                         {showNationalityDropdown && filteredNationalities.length > 0 && (
-                          <div 
+                          <div
                             className="position-absolute w-100 mt-1 border rounded bg-white z-index-dropdown"
                             style={{ maxHeight: '200px', overflowY: 'auto', zIndex: 1000 }}
                           >
                             {filteredNationalities.map((nat, index) => (
-                              <div 
-                                key={index} 
+                              <div
+                                key={index}
                                 className="p-2 cursor-pointer hover-bg-light border-bottom"
                                 style={{ cursor: 'pointer' }}
                                 onClick={() => {
@@ -584,9 +613,9 @@ export default function Interview() {
                   {error && !alreadyApplied && <div className="alert alert-danger mt-3">{error}</div>}
 
                   <div className="d-grid mt-4">
-                    <button 
-                      type="submit" 
-                      className="btn btn-primary py-2" 
+                    <button
+                      type="submit"
+                      className="btn btn-primary py-2"
                       disabled={alreadyApplied || checkingApplication || idValidationInProgress}
                     >
                       {checkingApplication ? (
@@ -602,9 +631,9 @@ export default function Interview() {
 
                   {alreadyApplied && (
                     <div className="d-grid mt-3">
-                      <button 
-                        type="button" 
-                        className="btn btn-outline-secondary" 
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
                         onClick={() => navigate("/")}
                       >
                         Return to Job Listings
@@ -640,10 +669,9 @@ export default function Interview() {
                   <div className="d-flex justify-content-between mb-3">
                     {[1, 2, 3].map((step) => (
                       <div key={step} className="text-center">
-                        <div 
-                          className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${
-                            currentStep === step ? 'bg-primary text-white' : 'bg-light'
-                          }`}
+                        <div
+                          className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${currentStep === step ? 'bg-primary text-white' : 'bg-light'
+                            }`}
                           style={{ width: '40px', height: '40px' }}
                         >
                           {step}
@@ -655,7 +683,7 @@ export default function Interview() {
                     ))}
                   </div>
                 </div>
-              
+
                 <div className="alert alert-info">
                   <div className="d-flex">
                     <div className="me-2">
@@ -667,65 +695,65 @@ export default function Interview() {
                     </div>
                   </div>
                 </div>
-                
+
                 <form onSubmit={(e) => e.preventDefault()}>
                   <div className="mb-3">
                     <label className="form-label fw-bold">CV / Resume *</label>
-                    <input 
-                      type="file" 
-                      onChange={(e) => handleFileChange(e, "cv")} 
-                      className="form-control" 
+                    <input
+                      type="file"
+                      onChange={(e) => handleFileChange(e, "cv")}
+                      className="form-control"
                       accept=".pdf,.doc,.docx"
                     />
                     <div className="form-text">Your most recent and updated curriculum vitae</div>
                   </div>
-                  
+
                   <div className="mb-3">
                     <label className="form-label fw-bold">Certificates *</label>
-                    <input 
-                      type="file" 
-                      onChange={(e) => handleFileChange(e, "certificates")} 
+                    <input
+                      type="file"
+                      onChange={(e) => handleFileChange(e, "certificates")}
                       className="form-control"
-                      accept=".pdf,.jpg,.jpeg,.png" 
+                      accept=".pdf,.jpg,.jpeg,.png"
                     />
                     <div className="form-text">Academic and professional certificates</div>
                   </div>
-                  
+
                   <div className="mb-3">
                     <label className="form-label fw-bold">ID Card / Passport *</label>
-                    <input 
-                      type="file" 
-                      onChange={(e) => handleFileChange(e, "idCard")} 
+                    <input
+                      type="file"
+                      onChange={(e) => handleFileChange(e, "idCard")}
                       className="form-control"
-                      accept=".pdf,.jpg,.jpeg,.png" 
+                      accept=".pdf,.jpg,.jpeg,.png"
                     />
                     <div className="form-text">Government-issued identification</div>
                   </div>
-                  
+
                   <div className="mb-3">
                     <label className="form-label fw-bold">Police Report *</label>
-                    <input 
-                      type="file" 
-                      onChange={(e) => handleFileChange(e, "policeReport")} 
+                    <input
+                      type="file"
+                      onChange={(e) => handleFileChange(e, "policeReport")}
                       className="form-control"
-                      accept=".pdf,.jpg,.jpeg,.png" 
+                      accept=".pdf,.jpg,.jpeg,.png"
                     />
                     <div className="form-text">Police clearance certificate</div>
                   </div>
-                  
+
                   <div className="mb-3">
                     <label className="form-label">Reference Documents</label>
-                    <input 
-                      type="file" 
-                      onChange={(e) => handleFileChange(e, "references")} 
+                    <input
+                      type="file"
+                      onChange={(e) => handleFileChange(e, "references")}
                       className="form-control"
-                      accept=".pdf,.jpg,.jpeg,.png" 
+                      accept=".pdf,.jpg,.jpeg,.png"
                     />
                     <div className="form-text">Letters of recommendation or references</div>
                   </div>
-                  
+
                   {error && <div className="alert alert-danger">{error}</div>}
-                  
+
                   <div className="d-grid mt-4">
                     <button onClick={handleDocumentSubmission} className="btn btn-primary py-2">
                       Continue to Interview
@@ -753,16 +781,15 @@ export default function Interview() {
             </div>
           </div>
         </div>
-        
+
         <div className="card-body p-4">
           <div className="mb-4">
             <div className="d-flex justify-content-between mb-3">
               {[1, 2, 3].map((step) => (
                 <div key={step} className="text-center">
-                  <div 
-                    className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${
-                      currentStep === step ? 'bg-primary text-white' : 'bg-light'
-                    }`}
+                  <div
+                    className={`rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 ${currentStep === step ? 'bg-primary text-white' : 'bg-light'
+                      }`}
                     style={{ width: '40px', height: '40px' }}
                   >
                     {step}
@@ -774,19 +801,19 @@ export default function Interview() {
               ))}
             </div>
           </div>
-          
+
           <div className="alert alert-warning">
             <div className="d-flex">
               <div className="me-2">
                 <i className="fa fa-exclamation-triangle"></i>
               </div>
               <div>
-                <strong>Important:</strong> You have {Math.floor(timeLeft / 60)} minutes and {timeLeft % 60} seconds remaining. 
+                <strong>Important:</strong> You have {Math.floor(timeLeft / 60)} minutes and {timeLeft % 60} seconds remaining.
                 The form will be automatically submitted when the timer expires.
               </div>
             </div>
           </div>
-          
+
           <div className="question-container">
             {islamicQuestions.length === 0 && personalityQuestions.length === 0 ? (
               <div className="text-center py-5">
@@ -860,10 +887,10 @@ export default function Interview() {
               </>
             )}
           </div>
-          
+
           <div className="d-grid mt-4">
-            <button 
-              onClick={() => { setSubmitted(true); handleUploadAndSubmit(); }} 
+            <button
+              onClick={() => { setSubmitted(true); handleUploadAndSubmit(); }}
               className="btn btn-primary py-2"
               disabled={islamicQuestions.length === 0 || personalityQuestions.length === 0}
             >

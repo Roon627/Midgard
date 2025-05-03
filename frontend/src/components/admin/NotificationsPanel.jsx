@@ -1,0 +1,60 @@
+import React, { useEffect, useState } from "react";
+import "./NotificationsPanel.css";
+
+function NotificationsPanel() {
+  const [notifications, setNotifications] = useState([]);
+  const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch("/api/notifications");
+        const data = await res.json();
+        setNotifications(data);
+      } catch (error) {
+        console.error("Failed to fetch notifications", error);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const filtered = filter === "all"
+    ? notifications
+    : notifications.filter(n => n.type === filter);
+
+  return (
+    <div className="notifications-panel card p-3 mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h4 className="notifications-title mb-0">Recent Updates</h4>
+        <select
+          className="form-select w-auto"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option value="all">All</option>
+          <option value="application">Applications</option>
+          <option value="job">Jobs</option>
+          <option value="system">System</option>
+        </select>
+      </div>
+
+      <ul className="notifications-list list-unstyled">
+        {filtered.length === 0 ? (
+          <li className="text-muted">No notifications available.</li>
+        ) : (
+          filtered.map((note) => (
+            <li key={note.id} className={`notification-item mb-2 ${note.type}`}>
+              <div className="notification-message">{note.message}</div>
+              <small className="notification-time text-muted">{new Date(note.createdAt).toLocaleString()}</small>
+            </li>
+          ))
+        )}
+      </ul>
+    </div>
+  );
+}
+
+export default NotificationsPanel;

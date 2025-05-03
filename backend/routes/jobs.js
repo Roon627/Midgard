@@ -23,6 +23,13 @@ router.post("/", (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
+
+    const createdAt = new Date().toISOString();
+    db.run(
+      `INSERT INTO notifications (type, message, createdAt) VALUES (?, ?, ?)`,
+      ["job", `New job "${title}" has been posted.`, createdAt]
+    );
+
     res.status(201).json({
       id: this.lastID,
       title,
@@ -43,6 +50,13 @@ router.put("/:id", (req, res) => {
 
   db.run(query, params, function (err) {
     if (err) return res.status(500).json({ error: err.message });
+
+    const createdAt = new Date().toISOString();
+    db.run(
+      `INSERT INTO notifications (type, message, createdAt) VALUES (?, ?, ?)`,
+      ["job", `Job "${title}" has been updated.`, createdAt]
+    );
+
     res.json({ message: "Job updated successfully" });
   });
 });
@@ -50,11 +64,24 @@ router.put("/:id", (req, res) => {
 // Delete a job
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
-  const query = "DELETE FROM jobs WHERE id = ?";
 
-  db.run(query, [id], function (err) {
+  // First, fetch the job title before deleting
+  db.get("SELECT title FROM jobs WHERE id = ?", [id], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.status(200).json({ message: "Job deleted successfully" });
+
+    const jobTitle = row ? row.title : "Unknown Job";
+
+    db.run("DELETE FROM jobs WHERE id = ?", [id], function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+
+      const createdAt = new Date().toISOString();
+      db.run(
+        `INSERT INTO notifications (type, message, createdAt) VALUES (?, ?, ?)`,
+        ["job", `Job "${jobTitle}" has been deleted.`, createdAt]
+      );
+
+      res.status(200).json({ message: "Job deleted successfully" });
+    });
   });
 });
 

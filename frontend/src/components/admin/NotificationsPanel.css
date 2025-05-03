@@ -1,0 +1,84 @@
+/* NotificationsPanel.css */
+
+.notifications-panel {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  max-height: 320px;
+  overflow-y: auto;
+  border-left: 6px solid #9c4dcc;
+}
+
+.notifications-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #6a1b9a;
+  margin-bottom: 0;
+}
+
+.notifications-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.notification-item {
+  background: #f9f4fc;
+  border-left: 4px solid #9c4dcc;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.75rem;
+  transition: background 0.3s ease;
+}
+
+.notification-item:hover {
+  background: #f3e5f5;
+}
+
+.notification-message {
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.notification-time {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.notification-item.application {
+  border-left-color: #4caf50;
+}
+
+.notification-item.job {
+  border-left-color: #ff9800;
+}
+
+.notification-item.submission {
+  border-left-color: #2196f3;
+}
+
+.notification-item.system {
+  border-left-color: #6a1b9a;
+}
+
+/* Dropdown filter style */
+.notifications-panel .form-select {
+  min-width: 150px;
+  font-size: 0.85rem;
+}
+
+/* Scrollbar Styling (for better UX in overflow) */
+.notifications-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notifications-panel::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 77, 204, 0.5);
+  border-radius: 4px;
+}
+
+.notifications-panel::-webkit-scrollbar-track {
+  background: transparent;
+}

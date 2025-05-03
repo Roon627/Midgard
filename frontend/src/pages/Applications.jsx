@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../data/api";
-import { exportToCsv, exportToPdf } from "../utils/exportUtils";
+import { exportSingleApplication } from "../utils/exportHelpers";
 import '../App.css';
 
 export default function Applications() {
@@ -34,18 +34,11 @@ export default function Applications() {
   };
 
   const exportApplication = (application, format) => {
-    const exportData = {
-      Name: application.name,
-      Email: application.email,
-      Phone: application.phoneNumber,
-      NationalID: application.nationalId,
-      JobTitle: findJobTitle(application.jobId),
-      SubmittedAt: application.createdAt,
-      Answers: JSON.stringify(application.answers),
-    };
-
-    if (format === "csv") exportToCsv([exportData], `application_${application.id}.csv`);
-    if (format === "pdf") exportToPdf([exportData], `application_${application.name.replace(/\s+/g, '_')}_report.pdf`);
+    exportSingleApplication({
+      application,
+      jobTitle: findJobTitle(application.jobId),
+      format
+    });
   };
 
   return (
@@ -129,7 +122,7 @@ export default function Applications() {
                       {typeof answer === "object" ? (
                         <>
                           <strong>Q{index + 1}:</strong> {answer.question || "Question not available"} <br />
-                          <span className="text-success"><strong>Candidate's Answer:</strong> {answer.selected || answer.answer || "—"}</span><br />
+                          <span className="text-success"><strong>Candidate's Answer:</strong> {answer.answer || answer.selected || "—"}</span><br />
                           {answer.correctAnswer && (
                             <span className="text-muted">
                               <strong>Correct Answer:</strong> {answer.correctAnswer}

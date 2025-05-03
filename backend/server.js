@@ -8,19 +8,23 @@ const path = require("path");
 
 const app = express();
 const db = require("./db");
+
 const adminRouter = require("./routes/admin");
 const jobsRouter = require("./routes/jobs");
 const submissionsRouter = require("./routes/submissions");
 const emailSettingsRouter = require("./routes/emailSettings");
+const notificationsRouter = require("./routes/notifications"); // ✅ NEW
 
-//Cloudflare frontend URL (without /api)
+const allowedOrigin = "https://certified-collectibles-confident-translated.trycloudflare.com";
 app.use(cors({
-  origin: "https://picked-defects-scary-future.trycloudflare.com",
+  origin: allowedOrigin,
   credentials: true
 }));
+
+// localhost
 //app.use(cors({
- // origin: "http://localhost:5173",
- // credentials: true
+//   origin: "http://localhost:5173",
+//   credentials: true
 //}));
 
 app.use(express.json());
@@ -38,6 +42,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/jobs", jobsRouter);
 app.use("/api/submissions", submissionsRouter);
 app.use("/api/email-settings", emailSettingsRouter);
+app.use("/api/notifications", notificationsRouter); // ✅ NEW
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

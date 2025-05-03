@@ -1,9 +1,9 @@
-// AdminDashboard.jsx
 import { useState, useEffect } from "react";
 import { API_URL } from "../data/api";
-import { exportToCsv, exportToPdf } from "../utils/exportUtils";
+import { exportApplicants } from "../utils/exportHelpers";
 import AdminSettings from "./AdminSettings"; 
-import Applications from "./Applications"; 
+import Applications from "./Applications";
+import NotificationsPanel from "../components/admin/NotificationsPanel"; 
 import '../App.css';
 
 export default function AdminDashboard() {
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    if (activeMenu === "jobs" || activeMenu === "dashboard" || activeMenu === "applications") {
+    if (["jobs", "dashboard", "applications"].includes(activeMenu)) {
       fetchData();
     }
   }, [activeMenu]);
@@ -42,10 +42,7 @@ export default function AdminDashboard() {
   const toggleExpiredView = () => setShowExpiredJobs(!showExpiredJobs);
 
   const filteredJobs = jobs
-    .filter(job => {
-      const isExpired = new Date(job.expiresAt) < new Date();
-      return showExpiredJobs ? isExpired : !isExpired;
-    })
+    .filter(job => showExpiredJobs ? new Date(job.expiresAt) < new Date() : new Date(job.expiresAt) >= new Date())
     .filter(job => job.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const startEditing = (job) => {
@@ -97,12 +94,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const exportApplicants = (jobId, format) => {
-    const jobApplicants = applications.filter(app => app.jobId === jobId);
-    if (format === 'csv') exportToCsv(jobApplicants, `job_${jobId}_applications.csv`);
-    if (format === 'pdf') exportToPdf(jobApplicants, `job_${jobId}_applications.pdf`);
-  };
-
   return (
     <div className="admin-dashboard-wrapper">
       <aside className="admin-sidebar shadow-sm rounded-3">
@@ -143,16 +134,19 @@ export default function AdminDashboard() {
         ) : (
           <div>
             {activeMenu === "dashboard" && (
-              <div className="dashboard-cards">
-                <div className="dashboard-card">
-                  <h5 className="mb-2">Total Jobs</h5>
-                  <h2>{jobs.length}</h2>
+              <>
+                <div className="dashboard-cards">
+                  <div className="dashboard-card">
+                    <h5 className="mb-2">Total Jobs</h5>
+                    <h2>{jobs.length}</h2>
+                  </div>
+                  <div className="dashboard-card">
+                    <h5 className="mb-2">Applications</h5>
+                    <h2>{applications.length}</h2>
+                  </div>
                 </div>
-                <div className="dashboard-card">
-                  <h5 className="mb-2">Applications</h5>
-                  <h2>{applications.length}</h2>
-                </div>
-              </div>
+                <NotificationsPanel /> {/* NEW */}
+              </>
             )}
 
             {activeMenu === "jobs" && (
@@ -219,8 +213,8 @@ export default function AdminDashboard() {
                             ) : (
                               <>
                                 <button className="btn btn-outline-primary btn-sm me-1" onClick={() => startEditing(job)}>Edit</button>
-                                <button className="btn btn-outline-success btn-sm me-1" onClick={() => exportApplicants(job.id, 'csv')}>CSV</button>
-                                <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplicants(job.id, 'pdf')}>PDF</button>
+                                <button className="btn btn-outline-success btn-sm me-1" onClick={() => exportApplicants({ jobId: job.id, applications, jobs, format: 'csv' })}>CSV</button>
+                                <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplicants({ jobId: job.id, applications, jobs, format: 'pdf' })}>PDF</button>
                               </>
                             )}
                           </td>

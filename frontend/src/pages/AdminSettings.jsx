@@ -12,6 +12,7 @@ export default function AdminSettings() {
     sender_name: "",
     email_subject: "",
     email_body: "",
+    admin_notification_email: "" // ✅ Added new field
   });
 
   const [password, setPassword] = useState("");
@@ -156,6 +157,20 @@ export default function AdminSettings() {
                 <label className="form-label">Email Body Template</label>
                 <textarea name="email_body" value={settings.email_body} onChange={handleChange} rows="5" className="form-control"></textarea>
                 <small className="text-muted">Use [LAST_NAME] as placeholder for user's last name.</small>
+              </div>
+
+              {/* ✅ New admin notification email field */}
+              <div className="col-12">
+                <label className="form-label">Admin Notification Email</label>
+                <input
+                  type="email"
+                  name="admin_notification_email"
+                  value={settings.admin_notification_email}
+                  onChange={handleChange}
+                  className="form-control"
+                  placeholder="e.g. hr@midgard.com"
+                />
+                <small className="text-muted">This email will receive admin alerts (e.g. new submissions).</small>
               </div>
             </div>
 

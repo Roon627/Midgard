@@ -15,37 +15,48 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + file.originalname);
   },
 });
-
 const upload = multer({ storage: storage });
 
-// Handle form submission with duplicate check
 router.post("/", upload.fields([
   { name: "resume", maxCount: 1 },
   { name: "certificates", maxCount: 1 },
   { name: "id_card", maxCount: 1 },
   { name: "police_report", maxCount: 1 },
-  { name: "additional_documents", maxCount: 1 }
+  { name: "reference_documents", maxCount: 1 }
 ]), async (req, res) => {
   try {
-    const { jobId, name, nationalId, passport, answers, email, phoneNumber } = req.body;
+    const { jobId, name, nationalId, passport, questionAnswers, email, phoneNumber } = req.body;
     const files = req.files;
 
-    if (!jobId || !name || !answers) {
+    if (!jobId || !name || !questionAnswers) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check for duplicate application
+    // Parse and validate answers
+    let parsedQuestionAnswers;
+    try {
+      parsedQuestionAnswers = JSON.parse(questionAnswers);
+      if (!Array.isArray(parsedQuestionAnswers) || !parsedQuestionAnswers.every(item =>
+        typeof item === 'object' &&
+        'question' in item &&
+        'answer' in item &&
+        'score' in item
+      )) {
+        return res.status(400).json({ error: "Invalid questionAnswers format" });
+      }
+    } catch (error) {
+      return res.status(400).json({ error: "Failed to parse questionAnswers" });
+    }
+
     const identifier = nationalId || passport || '';
     const idField = nationalId ? 'nationalId' : 'passport';
 
+    // Check for duplicate submission
     const existing = await new Promise((resolve, reject) => {
       db.get(
         `SELECT id FROM submissions WHERE jobId = ? AND ${idField} = ?`,
         [jobId, identifier],
-        (err, row) => {
-          if (err) reject(err);
-          else resolve(row);
-        }
+        (err, row) => err ? reject(err) : resolve(row)
       );
     });
 
@@ -53,10 +64,12 @@ router.post("/", upload.fields([
       return res.status(400).json({ error: "You have already applied for this job using this ID or passport." });
     }
 
+    const createdAt = new Date().toISOString();
+
     db.run(`
       INSERT INTO submissions
-      (jobId, name, email, phoneNumber, nationalId, passport, answers, resumePath, certificatesPath, idCardPath, policeReportPath, additionalDocumentsPath)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (jobId, name, email, phoneNumber, nationalId, passport, answers, resumePath, certificatesPath, idCardPath, policeReportPath, additionalDocumentsPath, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         jobId,
         name,
@@ -64,28 +77,40 @@ router.post("/", upload.fields([
         phoneNumber || '',
         nationalId || '',
         passport || '',
-        answers,
+        JSON.stringify(parsedQuestionAnswers),
         files?.resume?.[0]?.path || '',
         files?.certificates?.[0]?.path || '',
         files?.id_card?.[0]?.path || '',
         files?.police_report?.[0]?.path || '',
-        files?.additional_documents?.[0]?.path || ''
+        files?.reference_documents?.[0]?.path || '',
+        createdAt
       ],
       function (err) {
         if (err) {
           console.error("Database error during insert:", err);
           return res.status(500).json({ error: err.message });
         }
-        console.log("New submission inserted with ID:", this.lastID);
 
-        // Fetch email settings
+        const submissionId = this.lastID;
+        console.log("New submission inserted with ID:", submissionId);
+
+        // Add to notification table
+        const noteMessage = `New application received from ${name}.`;
+        db.run(
+          `INSERT INTO notifications (type, message, createdAt) VALUES (?, ?, ?)`,
+          ["application", noteMessage, createdAt],
+          (err) => {
+            if (err) console.error("Failed to log notification:", err);
+          }
+        );
+
+        // Send email to applicant
         db.get("SELECT * FROM email_settings WHERE id = 1", [], (err, settings) => {
           if (err || !settings) {
             console.error("Failed to fetch email settings:", err);
             return;
           }
 
-          // Fetch job title based on jobId
           db.get("SELECT title FROM jobs WHERE id = ?", [jobId], async (jobErr, jobRow) => {
             if (jobErr || !jobRow) {
               console.error("Failed to fetch job title:", jobErr);
@@ -104,12 +129,12 @@ router.post("/", upload.fields([
               });
 
               const lastName = name.split(" ").slice(-1)[0];
-              let emailBody = settings.email_body
+              const emailBody = settings.email_body
                 .replace("[LAST_NAME]", lastName)
                 .replace("[JOB_TITLE]", jobRow.title);
+              const emailSubject = settings.email_subject.replace("[JOB_TITLE]", jobRow.title);
 
-              let emailSubject = settings.email_subject.replace("[JOB_TITLE]", jobRow.title);
-
+              // Send to applicant
               await transporter.sendMail({
                 from: `"${settings.sender_name}" <${settings.sender_email}>`,
                 to: email,
@@ -117,14 +142,22 @@ router.post("/", upload.fields([
                 text: emailBody,
               });
 
-              console.log("Confirmation email sent to:", email);
+              // Send to admin
+              await transporter.sendMail({
+                from: `"${settings.sender_name}" <${settings.sender_email}>`,
+                to: "hr@midgard.com", // or make this configurable
+                subject: "New Job Application Received",
+                text: `A new application has been submitted by ${name} for ${jobRow.title}.`,
+              });
+
+              console.log("Emails sent to user and admin.");
             } catch (error) {
-              console.error("Error sending confirmation email:", error);
+              console.error("Error sending email:", error);
             }
           });
         });
 
-        res.json({ id: this.lastID });
+        res.json({ id: submissionId });
       }
     );
   } catch (error) {
@@ -149,7 +182,7 @@ router.get("/", (req, res) => {
   });
 });
 
-// NEW: Check for existing application by ID/passport
+// Check for existing application
 router.post("/check-application", (req, res) => {
   const { jobId, identifierType, identifierValue } = req.body;
 
@@ -167,7 +200,6 @@ router.post("/check-application", (req, res) => {
         console.error("Error checking application:", err);
         return res.status(500).json({ error: "Internal server error" });
       }
-
       return res.json({ exists: !!row });
     }
   );
