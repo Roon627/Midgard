@@ -1,11 +1,11 @@
-/* Reset some default styles */
+/* ======================= Reset Styles ======================= */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Body Styles */
+/* ======================= Body Styles ======================= */
 body {
   font-family: 'Arial', sans-serif;
   background-color: #f8f9fa;
@@ -16,26 +16,25 @@ body {
   min-height: 100vh;
 }
 
-/* Global Link Styles */
+/* ======================= Global Links ======================= */
 a {
   color: #9c4dcc;
   text-decoration: none;
   transition: color 0.3s ease;
 }
-
 a:hover {
   color: #6a1b9a;
   text-decoration: underline;
 }
 
-/* Container for page content */
+/* ======================= Page Container ======================= */
 .container {
   padding: 2rem;
   margin: 0 auto;
   max-width: 1200px;
 }
 
-/* Button styles */
+/* ======================= Button Styles ======================= */
 button {
   background-color: #9c4dcc;
   color: white;
@@ -45,13 +44,27 @@ button {
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
-
 button:hover {
   background-color: #6a1b9a;
   transform: translateY(-2px);
 }
 
-/* Input Fields */
+/* Animated Buttons */
+.btn-animated {
+  transition: all 0.3s ease;
+  border-radius: 50px;
+  font-weight: 500;
+  padding: 10px 25px;
+  box-shadow: 0 4px 12px rgba(156, 77, 204, 0.2);
+}
+.btn-animated:hover {
+  background-color: #9c4dcc !important;
+  color: white !important;
+  transform: scale(1.03);
+  box-shadow: 0 6px 18px rgba(156, 77, 204, 0.3);
+}
+
+/* ======================= Input Fields ======================= */
 input,
 select,
 textarea {
@@ -61,7 +74,6 @@ textarea {
   border-radius: 5px;
   border: 1px solid #ccc;
 }
-
 input:focus,
 select:focus,
 textarea:focus {
@@ -69,8 +81,16 @@ textarea:focus {
   border-color: #9c4dcc;
   box-shadow: 0 0 5px rgba(156, 77, 204, 0.2);
 }
+input.form-control,
+select.form-select,
+textarea.form-control {
+  height: 48px;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 5px;
+}
 
-/* Footer Styles */
+/* ======================= Footer ======================= */
 footer {
   background: linear-gradient(90deg, #9c4dcc 0%, #6a1b9a 100%);
   padding: 1rem 0;
@@ -81,82 +101,23 @@ footer {
   bottom: 0;
   width: 100%;
 }
-
 footer a {
   color: white;
 }
-
 footer .social-icons a {
   color: white;
   transition: color 0.3s ease;
 }
-
 footer .social-icons a:hover {
   color: #6a1b9a;
 }
-
 footer p {
   margin: 0;
   font-size: 14px;
   letter-spacing: 1px;
 }
 
-/* Navbar Custom Styles */
-.navbar-custom {
-  background: linear-gradient(135deg, #9c4dcc 0%, #6a1b9a 100%);
-  transition: all 0.3s ease;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-}
-
-.navbar-custom .navbar-brand .brand-text {
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  background: linear-gradient(98deg, #ffffff, #ffffff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.navbar-custom .navbar-toggler {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 8px 10px;
-}
-
-.navbar-custom .navbar-nav .nav-item .nav-link {
-  color: white;
-  font-weight: normal;
-  transition: all 0.2s ease;
-}
-
-.navbar-custom .navbar-nav .nav-item .nav-link:hover,
-.navbar-custom .navbar-nav .nav-item .nav-link.active {
-  background: rgba(255, 255, 255, 0.15);
-  font-weight: 600;
-}
-
-.navbar-custom .navbar-nav .nav-item .nav-link .me-2 {
-  font-size: 0.9rem;
-}
-
-.navbar-custom .btn {
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border-radius: 50px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.navbar-custom .btn:hover {
-  background: white;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-/* Contact Us Button */
+/* ======================= Contact Us ======================= */
 .contact-form button {
   background-color: #9c4dcc;
   color: white;
@@ -166,19 +127,18 @@ footer p {
   font-weight: 600;
   transition: background-color 0.3s ease;
 }
-
 .contact-form button:hover {
   background-color: #7a39b8;
 }
 
-/* Responsive Navbar Collapse */
+/* ======================= Responsive Adjustments ======================= */
 @media (max-width: 991px) {
   .navbar-custom .navbar-collapse {
     background-color: #6a1b9a;
   }
 }
 
-/*Home background */
+/* ======================= Home Under Construction Image ======================= */
 .under-construction-image {
   width: 100%;
   max-width: 800px;
@@ -186,19 +146,20 @@ footer p {
   display: block;
   margin: 0 auto;
 }
-
 @media (max-width: 576px) {
   .under-construction-image {
     max-width: 100%;
   }
 }
 
-
-
-/* Careers Page Styles */
-
+/* ======================= Careers Page ======================= */
 .career-page-wrapper {
-  background-color: #ffffff !important;
+  background-color: #ffffff;
+  padding-bottom: 2rem;
+  padding-top: 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 .careers-job-list {
   display: flex;
@@ -207,7 +168,6 @@ footer p {
   gap: 2rem;
   margin-top: 2rem;
 }
-
 .career-job-card {
   background: white;
   border-radius: 10px;
@@ -217,12 +177,12 @@ footer p {
   max-width: 400px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 .career-job-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* ======================= Apply Buttons ======================= */
 .btn-apply,
 .card button {
   background: linear-gradient(135deg, #9c4dcc, #6a1b9a);
@@ -237,32 +197,29 @@ footer p {
   margin-top: 1rem;
   width: 100%;
 }
-
 .btn-apply:hover,
 .card button:hover {
   background: #7a39b8;
   transform: translateY(-2px);
 }
 
-/* Countdown Timer */
+/* ======================= Countdown Timer ======================= */
 .card-text {
   font-size: 0.875rem;
   color: #555;
 }
-
 .card .timer {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
 }
-
 .card .timer div {
   background-color: #f8f9fa;
   border-radius: 8px;
   padding: 5px;
 }
 
-/* Alerts (global) */
+/* ======================= Alerts ======================= */
 .alert {
   background-color: #f8d7da;
   color: #721c24;
@@ -271,33 +228,444 @@ footer p {
   margin: 1rem 0;
   border-radius: 5px;
 }
-
 .alert-danger {
   background-color: #f8d7da;
   color: #721c24;
 }
-
 .alert-success {
   background-color: #d4edda;
   color: #155724;
 }
-
 .alert-warning {
   background-color: #fff3cd;
   color: #856404;
 }
-
 .alert-info {
   background-color: #d1ecf1;
   color: #0c5460;
 }
 
-/* Career page wrapper */
-.career-page-wrapper {
-  background-color: #f3e5f5;
-  padding-bottom: 2rem;
-  padding-top: 2rem;
-  min-height: 100vh;
+/* ======================= Phone Input ======================= */
+.react-tel-input {
+  width: 100% !important;
+}
+.react-tel-input .form-control {
+  width: 100% !important;
+  height: 48px !important;
+  padding: 12px 12px 12px 60px !important;
+  font-size: 1rem !important;
+  border-radius: 5px !important;
+  border: 1px solid #ccc !important;
+}
+
+/* ======================= Steps Tracker ======================= */
+.step-tracker .step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #dee2e6;
+  color: #6c757d;
+  line-height: 40px;
+  font-weight: 600;
+  margin: 0 auto 8px;
+  transition: all 0.3s ease;
+}
+
+.step-tracker .step-circle.active {
+  background-color: #9c4dcc;
+  color: white;
+}
+
+.step-tracker .step-circle.completed {
+  background-color: #6a1b9a;
+  color: white;
+}
+
+.step-tracker .step-label {
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+/* ======================= Assesment Styles ======================= */
+.assessment-card {
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+}
+
+.assessment-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(156, 77, 204, 0.15);
+}
+
+.assessment-card-header {
+  background: linear-gradient(135deg, #9c4dcc 0%, #6a1b9a 100%);
+  color: white !important;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-bottom: none;
+}
+
+.assessment-card-header h2,
+.assessment-card-header p {
+  color: white !important;
+  margin: 0;
+}
+
+.assessment-steps {
+  background-color: rgba(156, 77, 204, 0.05);
+  border-left: 4px solid #9c4dcc;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.assessment-steps-title {
+  color: #6a1b9a;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.time-notice {
+  background-color: #f8f9fa;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, #9c4dcc 0%, #6a1b9a 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 0.75rem 2.5rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(156, 77, 204, 0.3);
+}
+
+.btn-gradient:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(156, 77, 204, 0.4);
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.text-success {
+  color: #28a745 !important;
+}
+
+/* Optional: Responsive Max Width */
+@media (min-width: 1200px) {
+  .assessment-card {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ======================= Questions View ======================= */
+.question-container .card {
+  border: none;
+  border-radius: 12px;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  background-color: #ffffff;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.question-container .card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+}
+
+.question-container .card-title {
+  font-weight: 600;
+  color: #6a1b9a;
+}
+
+.question-container .form-check {
+  background-color: #f9f5fc;
+  transition: background-color 0.2s, transform 0.2s ease;
+  padding: 0.75rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.question-container .form-check:hover {
+  background-color: #eee3fa;
+  transform: scale(1.01);
+}
+
+.question-container .form-check-input {
+  margin-right: 0.5rem;
+  cursor: pointer;
+  accent-color: #9c4dcc;
+}
+
+.question-container .form-check-label {
+  margin-bottom: 0;
+  flex: 1;
+  cursor: pointer;
+  color: #333;
+}
+
+.question-container .form-check-input:checked + .form-check-label {
+  font-weight: 600;
+  color: #6a1b9a;
+}
+
+input[type="radio"]:checked + label {
+  font-weight: bold;
+  color: #6a1b9a;
+}
+
+/* Optionally highlight the selected container */
+.question-container .form-check-input:checked ~ .form-check {
+  border-left: 4px solid #9c4dcc;
+}
+
+/* Optional hover effect for option blocks */
+.question-option:hover {
+  background-color: rgba(156, 77, 204, 0.1);
+  transition: 0.3s;
+}
+
+/* Entry animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ======================= Base Navbar Styles ======================= */
+.navbar-custom {
+  background-color: #6a1b9a;
+  padding: 1rem 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-custom .brand-text {
+  color: white;
+  font-weight: 700;
+  font-size: 1.8rem;
+  letter-spacing: 0.5px;
+}
+
+.navbar-custom .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-custom .active-indicator {
+  height: 3px;
+  width: 50%;
+  background: white;
+  bottom: 2px;
+  border-radius: 10px;
+  opacity: 0.7;
+  left: 25%;
+  position: absolute;
+}
+
+/* Scrolled navbar effect */
+.navbar-custom.navbar-scrolled {
+  padding: 0.5rem 0;
+  background-color: rgba(106, 27, 154, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* ======================= Mobile Navbar Enhancements ======================= */
+@media (max-width: 768px) {
+  /* Show hamburger */
+  .navbar-custom .mobile-nav-toggle {
+    display: block;
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    z-index: 1001;
+    transition: all 0.3s ease;
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+  }
+  
+  .navbar-custom .mobile-nav-toggle:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 4px;
+  }
+  
+  /* Removed backdrop as we're using a dropdown instead of a drawer */
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Mobile menu dropdown */
+  .navbar-custom .navbar-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background-color: #6a1b9a;
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+  }
+  
+  .navbar-custom .navbar-nav.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    padding: 0.5rem 0 1rem 0;
+  }
+  
+  .navbar-custom .navbar-nav .nav-item {
+    padding: 0.25rem 1rem;
+    text-align: center;
+    width: 100%;
+    margin: 0;
+  }
+  
+  .navbar-custom .navbar-nav .nav-link {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+  }
+  
+  .navbar-custom .nav-link .me-2 {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    margin-right: 8px !important;
+  }
+  
+  .navbar-custom .active-indicator {
+    display: none;
+  }
+  
+  .navbar-custom .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+  }
+  
+  .navbar-right {
+    display: none !important;
+  }
+  
+  /* Admin link for mobile */
+  .mobile-only-admin {
+    margin-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 1rem;
+  }
+  
+  .admin-link {
+    background-color: rgba(255, 255, 255, 0.15);
+    font-weight: 500;
+  }
+}
+
+/* Animation for menu items */
+@media (max-width: 768px) {
+  .navbar-custom .navbar-nav.open .nav-item {
+    animation: fadeIn 0.3s ease forwards;
+    opacity: 0;
+  }
+  
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .navbar-custom .navbar-nav.open .nav-item:nth-child(1) { animation-delay: 0.1s; }
+  .navbar-custom .navbar-nav.open .nav-item:nth-child(2) { animation-delay: 0.15s; }
+  .navbar-custom .navbar-nav.open .nav-item:nth-child(3) { animation-delay: 0.2s; }
+  .navbar-custom .navbar-nav.open .nav-item:nth-child(4) { animation-delay: 0.25s; }
+  .navbar-custom .navbar-nav.open .nav-item:nth-child(5) { animation-delay: 0.3s; }
+}
+
+/* ======================= Desktop Navbar Layout ======================= */
+@media (min-width: 769px) {
+  .navbar-custom .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .navbar-custom .navbar-nav {
+    flex-direction: row;
+    position: static;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    background: transparent;
+    justify-content: center;
+    flex-grow: 1;
+    padding: 0;
+    width: auto;
+    max-width: none;
+  }
+  
+  .navbar-custom .navbar-nav .nav-item {
+    padding: 0;
+    margin: 0 0.5rem;
+  }
+  
+  .navbar-custom .mobile-nav-toggle {
+    display: none;
+  }
+  
+  .mobile-only-admin {
+    display: none;
+  }
+  
+  /* Button hover effect */
+  .navbar-right .btn {
+    transition: all 0.3s ease;
+  }
+  
+  .navbar-right .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
 }

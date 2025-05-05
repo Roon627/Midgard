@@ -11,7 +11,6 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminSubmissions from "./pages/AdminSubmissions";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
-import Admin from "./pages/Admin";
 import Interview from "./pages/Interview";
 import Careers from "./pages/Careers";
 import Contact from "./pages/Contact";
@@ -30,7 +29,6 @@ function App() {
             <Route path="/careers" element={<Careers />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
-            <Route path="/admin" element={<Admin />} />
             <Route path="/interview/:jobId" element={<Interview />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

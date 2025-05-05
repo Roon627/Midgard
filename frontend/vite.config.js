@@ -6,11 +6,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://earn-stores-ministry-simple.trycloudflare.com',
+        target: 'https://plumbing-colony-dictionary-directly.trycloudflare.com',
         changeOrigin: true,
         secure: false,
       },
     },
-    allowedHosts: ['certified-collectibles-confident-translated.trycloudflare.com'],
+    allowedHosts: ['photographers-requirement-indicators-invitation.trycloudflare.com'],
   },
 });

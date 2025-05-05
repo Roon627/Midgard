@@ -15,7 +15,7 @@ const submissionsRouter = require("./routes/submissions");
 const emailSettingsRouter = require("./routes/emailSettings");
 const notificationsRouter = require("./routes/notifications"); // ✅ NEW
 
-const allowedOrigin = "https://certified-collectibles-confident-translated.trycloudflare.com";
+const allowedOrigin = "https://photographers-requirement-indicators-invitation.trycloudflare.com";
 app.use(cors({
   origin: allowedOrigin,
   credentials: true

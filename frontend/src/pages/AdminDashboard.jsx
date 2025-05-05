@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../data/api";
 import { exportApplicants } from "../utils/exportHelpers";
-import AdminSettings from "./AdminSettings"; 
+import AdminSettings from "./AdminSettings";
 import Applications from "./Applications";
-import NotificationsPanel from "../components/admin/NotificationsPanel"; 
-import '../App.css';
+import NotificationsPanel from "../components/admin/NotificationsPanel";
+import "../App.css";
 
 export default function AdminDashboard() {
   const [jobs, setJobs] = useState([]);
@@ -96,6 +96,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-dashboard-wrapper">
+      {/* Sidebar Navigation */}
       <aside className="admin-sidebar shadow-sm rounded-3">
         <h3 className="admin-sidebar-header">Admin</h3>
         <ul className="admin-nav">
@@ -104,7 +105,6 @@ export default function AdminDashboard() {
               key={menu}
               className={`admin-nav-item ${activeMenu === menu ? "active" : ""}`}
               onClick={() => setActiveMenu(menu)}
-              style={{ cursor: "pointer" }}
             >
               {menu.charAt(0).toUpperCase() + menu.slice(1)}
             </li>
@@ -112,11 +112,12 @@ export default function AdminDashboard() {
         </ul>
       </aside>
 
+      {/* Main Content Area */}
       <div className="admin-content">
-        <div className="admin-content-header d-flex justify-content-between align-items-center">
+        <div className="admin-content-header">
           <h2>{activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)}</h2>
           {activeMenu === "jobs" && (
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 flex-wrap">
               <button onClick={toggleExpiredView} className="toggle-btn">
                 {showExpiredJobs ? "Show Active Jobs" : "Show Expired Jobs"}
               </button>
@@ -127,12 +128,12 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {isLoading && (activeMenu !== "settings") ? (
+        {isLoading && activeMenu !== "settings" ? (
           <div className="spinner-container">
             <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}></div>
           </div>
         ) : (
-          <div>
+          <>
             {activeMenu === "dashboard" && (
               <>
                 <div className="dashboard-cards">
@@ -145,7 +146,7 @@ export default function AdminDashboard() {
                     <h2>{applications.length}</h2>
                   </div>
                 </div>
-                <NotificationsPanel /> {/* NEW */}
+                <NotificationsPanel />
               </>
             )}
 
@@ -183,7 +184,6 @@ export default function AdminDashboard() {
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className="search-input mb-3"
-                  style={{ boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)" }}
                 />
                 <table className="admin-table">
                   <thead className="table-light">
@@ -199,7 +199,7 @@ export default function AdminDashboard() {
                     {filteredJobs.map(job => {
                       const applicantCount = applications.filter(a => a.jobId === job.id).length;
                       return (
-                        <tr key={job.id} className="align-middle">
+                        <tr key={job.id}>
                           <td>{editingJobId === job.id ? <input value={editedJob.title} onChange={e => setEditedJob({ ...editedJob, title: e.target.value })} /> : job.title}</td>
                           <td>{editingJobId === job.id ? <input value={editedJob.description} onChange={e => setEditedJob({ ...editedJob, description: e.target.value })} /> : job.description.substring(0, 40) + "..."}</td>
                           <td>{editingJobId === job.id ? <input type="datetime-local" value={editedJob.expiresAt} onChange={e => setEditedJob({ ...editedJob, expiresAt: e.target.value })} /> : new Date(job.expiresAt).toLocaleDateString()}</td>
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                 <AdminSettings />
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
