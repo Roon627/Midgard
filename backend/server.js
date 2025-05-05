@@ -9,52 +9,49 @@ const path = require("path");
 const app = express();
 const db = require("./db");
 
+// Routers
 const adminRouter = require("./routes/admin");
 const jobsRouter = require("./routes/jobs");
 const submissionsRouter = require("./routes/submissions");
 const emailSettingsRouter = require("./routes/emailSettings");
-const notificationsRouter = require("./routes/notifications"); // ✅ NEW
+const notificationsRouter = require("./routes/notifications");
 
-const allowedOrigin = "https://photographers-requirement-indicators-invitation.trycloudflare.com";
+// ====== Middleware ======
+
 app.use(cors({
-  origin: allowedOrigin,
-  credentials: true
+  origin: true,
+  credentials: true,
 }));
-
-// localhost
-//app.use(cors({
-//   origin: "http://localhost:5173",
-//   credentials: true
-//}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session management
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.SESSION_SECRET || "your-session-secret",
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
 }));
 
-// Routes
+// ====== Routes ======
+
+// ✅ Single Admin Route — token protection handled in adminRouter
 app.use("/api/admin", adminRouter);
+
 app.use("/api/jobs", jobsRouter);
 app.use("/api/submissions", submissionsRouter);
 app.use("/api/email-settings", emailSettingsRouter);
-app.use("/api/notifications", notificationsRouter); // ✅ NEW
+app.use("/api/notifications", notificationsRouter);
 
-// Serve uploaded files
+// ====== Static uploads ======
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// File upload config
+// ====== File Upload ======
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 const upload = multer({ storage });
 
-// Upload endpoint
 app.post("/api/upload", upload.any(), (req, res) => {
   const fileData = req.files.map((f) => ({
     original: f.originalname,
@@ -63,26 +60,9 @@ app.post("/api/upload", upload.any(), (req, res) => {
   res.json({ uploaded: fileData });
 });
 
-// Admin session check
-app.get("/api/admin/status", (req, res) => {
-  res.json({ admin: !!req.session.admin });
-});
-
-// Admin login
-app.post("/api/admin/login", (req, res) => {
-  const { username, password } = req.body;
-  if (username === "admin" && password === "admin") {
-    req.session.admin = true;
-    return res.json({ message: "Login successful" });
-  } else {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
-});
-
-// 📧 Contact form handler
+// ====== Contact Form ======
 app.post("/api/contact", async (req, res) => {
   const { name, email, message } = req.body;
-
   if (!name || !email || !message) {
     return res.status(400).json({ error: "All fields are required." });
   }
@@ -117,13 +97,13 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
-// Health check route
+// ====== Health Check ======
 app.get("/api/ping", (req, res) => {
   res.send("pong");
 });
 
-// Start server
+// ====== Start Server ======
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Backend running on port ${PORT}`);
 });

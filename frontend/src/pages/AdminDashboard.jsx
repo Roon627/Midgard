@@ -4,7 +4,7 @@ import { exportApplicants } from "../utils/exportHelpers";
 import AdminSettings from "./AdminSettings";
 import Applications from "./Applications";
 import NotificationsPanel from "../components/admin/NotificationsPanel";
-import "../App.css";
+import "../styles/AdminDashboard.css";
 
 export default function AdminDashboard() {
   const [jobs, setJobs] = useState([]);
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
   return (
     <div className="admin-dashboard-wrapper">
       {/* Sidebar Navigation */}
-      <aside className="admin-sidebar shadow-sm rounded-3">
+      <aside className="admin-sidebar">
         <h3 className="admin-sidebar-header">Admin</h3>
         <ul className="admin-nav">
           {["dashboard", "jobs", "applications", "settings"].map(menu => (
@@ -168,7 +168,7 @@ export default function AdminDashboard() {
                       value={newJob.description}
                       onChange={(e) => setNewJob({ ...newJob, description: e.target.value })}
                       rows="3"
-                    ></textarea>
+                    />
                     <input
                       type="datetime-local"
                       className="form-control mb-2"
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
                   className="search-input mb-3"
                 />
                 <table className="admin-table">
-                  <thead className="table-light">
+                  <thead>
                     <tr>
                       <th>Title</th>
                       <th>Description</th>
@@ -200,9 +200,21 @@ export default function AdminDashboard() {
                       const applicantCount = applications.filter(a => a.jobId === job.id).length;
                       return (
                         <tr key={job.id}>
-                          <td>{editingJobId === job.id ? <input value={editedJob.title} onChange={e => setEditedJob({ ...editedJob, title: e.target.value })} /> : job.title}</td>
-                          <td>{editingJobId === job.id ? <input value={editedJob.description} onChange={e => setEditedJob({ ...editedJob, description: e.target.value })} /> : job.description.substring(0, 40) + "..."}</td>
-                          <td>{editingJobId === job.id ? <input type="datetime-local" value={editedJob.expiresAt} onChange={e => setEditedJob({ ...editedJob, expiresAt: e.target.value })} /> : new Date(job.expiresAt).toLocaleDateString()}</td>
+                          <td>
+                            {editingJobId === job.id
+                              ? <input value={editedJob.title} onChange={e => setEditedJob({ ...editedJob, title: e.target.value })} />
+                              : job.title}
+                          </td>
+                          <td>
+                            {editingJobId === job.id
+                              ? <input value={editedJob.description} onChange={e => setEditedJob({ ...editedJob, description: e.target.value })} />
+                              : job.description.slice(0, 40) + "..."}
+                          </td>
+                          <td>
+                            {editingJobId === job.id
+                              ? <input type="datetime-local" value={editedJob.expiresAt} onChange={e => setEditedJob({ ...editedJob, expiresAt: e.target.value })} />
+                              : new Date(job.expiresAt).toLocaleDateString()}
+                          </td>
                           <td>{applicantCount}</td>
                           <td>
                             {editingJobId === job.id ? (

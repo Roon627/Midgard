@@ -2,43 +2,113 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 const db = require("../db");
+const bcrypt = require("bcrypt");
 
-// Secret key for JWT (store this in .env in production)
-const JWT_SECRET = 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || "your-fallback-secret";
 
-// Admin login route (skipping password check for now)
+// ===================== Public Routes =====================
+
+// Login route
 router.post("/login", (req, res) => {
-  const { username } = req.body; // Only get username, no password validation
+  const { username, password } = req.body;
+  if (!username || !password)
+    return res.status(400).json({ message: "Username and password required." });
 
-  db.get("SELECT * FROM admins WHERE username = ?", [username], (err, row) => {
+  db.get("SELECT * FROM admins WHERE username = ?", [username], (err, admin) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!row) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+    if (!admin) return res.status(401).json({ message: "Invalid credentials." });
 
-    // Generate JWT token without validating password
-    const token = jwt.sign({ username: row.username, id: row.id }, JWT_SECRET, {
-      expiresIn: '1h', // Token expires in 1 hour
+    bcrypt.compare(password, admin.password, (err, match) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!match) return res.status(401).json({ message: "Invalid credentials." });
+
+      const token = jwt.sign(
+        { username: admin.username, id: admin.id },
+        JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.json({ message: "Login successful", token });
     });
-
-    // Send the token to the frontend
-    res.json({ message: "Login successful", token });
   });
 });
 
-// Verify JWT token (for protected routes)
-router.get("/status", (req, res) => {
-  const token = req.headers['authorization']?.split(" ")[1]; // Get token from headers
-  if (!token) {
-    return res.status(401).json({ admin: false });
-  }
+// Add admin route
+router.post("/add", async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password)
+    return res.status(400).json({ message: "Username and password required." });
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  db.run(
+    "INSERT INTO admins (username, password) VALUES (?, ?)",
+    [username, hashedPassword],
+    function (err) {
+      if (err) {
+        if (err.message.includes("UNIQUE")) {
+          return res.status(409).json({ message: "Username already exists." });
+        }
+        return res.status(500).json({ error: err.message });
+      }
+      res.status(201).json({ message: "Admin created", id: this.lastID });
+    }
+  );
+});
+
+// ===================== JWT Middleware =====================
+// Protect all routes after this
+router.use((req, res, next) => {
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "No token provided" });
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ admin: false });
-    }
-    res.json({ admin: true, user: decoded });
+    if (err) return res.status(403).json({ message: "Invalid token" });
+    req.admin = decoded;
+    next();
   });
+});
+
+// ===================== Protected Routes =====================
+
+// Reset password
+router.post("/reset-password", async (req, res) => {
+  const { newPassword } = req.body;
+  const decoded = req.admin;
+
+  if (!newPassword) {
+    return res.status(400).json({ message: "New password required." });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    db.run(
+      "UPDATE admins SET password = ? WHERE id = ?",
+      [hashedPassword, decoded.id],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) {
+          return res.status(404).json({ message: "Admin not found." });
+        }
+
+        res.json({ message: "Password updated successfully." });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error updating password." });
+  }
+});
+
+// Check login status
+router.get("/status", (req, res) => {
+  return res.json({ admin: true, user: req.admin });
+});
+
+// Example: dashboard route
+router.get("/dashboard", (req, res) => {
+  res.json({ message: "Protected admin dashboard data", user: req.admin });
 });
 
 module.exports = router;

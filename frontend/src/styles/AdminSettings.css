@@ -1,0 +1,60 @@
+/* AdminSettings.css */
+
+/* Sidebar compact layout */
+.admin-settings .list-group-item.disabled {
+    font-size: 0.85rem;
+    color: #333;
+    background: #f9f9f9;
+    font-weight: 500;
+  }
+  
+  .admin-settings .list-group-item {
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .admin-settings .list-group-item.active {
+    background: linear-gradient(135deg, #9c4dcc 0%, #6a1b9a 100%);
+    color: white;
+    font-weight: bold;
+  }
+  
+  .admin-settings .list-group-item:hover {
+    background-color: #f1f1f1;
+  }
+  
+  /* Form spacing */
+  .admin-settings .form-label {
+    font-weight: 500;
+  }
+  
+  .admin-settings .form-control {
+    font-size: 0.95rem;
+  }
+  
+  .admin-settings .btn {
+    font-size: 0.9rem;
+  }
+  
+  .admin-settings .alert {
+    font-size: 0.9rem;
+  }
+  
+  /* Responsive fixes */
+  @media (max-width: 768px) {
+    .admin-settings .list-group {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+  
+    .admin-settings .list-group-item {
+      padding: 0.75rem 1rem;
+      text-align: center;
+    }
+  
+    .admin-settings .btn,
+    .admin-settings .form-control {
+      font-size: 1rem;
+    }
+  }
+  

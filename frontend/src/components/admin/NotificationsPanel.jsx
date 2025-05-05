@@ -21,6 +21,16 @@ function NotificationsPanel() {
     return () => clearInterval(interval);
   }, []);
 
+  const getIcon = (type) => {
+    switch (type) {
+      case "application": return "📄";
+      case "job": return "💼";
+      case "system": return "🛠️";
+      case "submission": return "📬";
+      default: return "🔔";
+    }
+  };
+
   const filtered = filter === "all"
     ? notifications
     : notifications.filter(n => n.type === filter);
@@ -37,6 +47,7 @@ function NotificationsPanel() {
           <option value="all">All</option>
           <option value="application">Applications</option>
           <option value="job">Jobs</option>
+          <option value="submission">Submissions</option>
           <option value="system">System</option>
         </select>
       </div>
@@ -46,9 +57,14 @@ function NotificationsPanel() {
           <li className="text-muted">No notifications available.</li>
         ) : (
           filtered.map((note) => (
-            <li key={note.id} className={`notification-item mb-2 ${note.type}`}>
-              <div className="notification-message">{note.message}</div>
-              <small className="notification-time text-muted">{new Date(note.createdAt).toLocaleString()}</small>
+            <li key={note.id} className={`notification-item d-flex align-items-start ${note.type}`}>
+              <div className="notification-icon me-2">{getIcon(note.type)}</div>
+              <div className="notification-details">
+                <div className="notification-message">{note.message}</div>
+                <small className="notification-time text-muted">
+                  {new Date(note.createdAt).toLocaleString()}
+                </small>
+              </div>
             </li>
           ))
         )}

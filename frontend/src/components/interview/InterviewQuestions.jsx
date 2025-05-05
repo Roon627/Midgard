@@ -136,6 +136,7 @@ const InterviewQuestions = ({
           <div className="d-grid mt-4">
             {step < 5 ? (
               <button
+                type="button" // ✅ added type to prevent implicit submit
                 onClick={() => setStep(step + 1)}
                 className="btn btn-gradient-next py-2"
               >
@@ -143,6 +144,7 @@ const InterviewQuestions = ({
               </button>
             ) : (
               <button
+                type="button" // ✅ added type to prevent implicit submit
                 onClick={handleUploadAndSubmit}
                 className="btn btn-success py-2"
               >

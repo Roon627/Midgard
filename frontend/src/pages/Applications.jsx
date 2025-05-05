@@ -43,8 +43,6 @@ export default function Applications() {
 
   return (
     <div className="container py-4">
-      <h2 className="mb-4 text-primary">Applications</h2>
-
       {isLoading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status" />

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../data/api";
+import { useNavigate } from "react-router-dom";
+import "../styles/AdminSettings.css";
 
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState("smtp");
@@ -12,19 +14,20 @@ export default function AdminSettings() {
     sender_name: "",
     email_subject: "",
     email_body: "",
-    admin_notification_email: "" // ✅ Added new field
+    admin_notification_email: ""
   });
-
   const [password, setPassword] = useState("");
+  const [newAdmin, setNewAdmin] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [testStatus, setTestStatus] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (activeTab === "smtp") {
-      fetchSettings();
-    }
+    if (activeTab === "smtp") fetchSettings();
+    fetchAdminStatus();
   }, [activeTab]);
 
   const fetchSettings = async () => {
@@ -34,6 +37,20 @@ export default function AdminSettings() {
       setSettings(data);
     } catch (error) {
       console.error("Error fetching settings:", error);
+    }
+  };
+
+  const fetchAdminStatus = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/admin/status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) setCurrentUser(data.user?.username || "Unknown");
+    } catch (err) {
+      console.error("Auth check failed:", err);
     }
   };
 
@@ -62,10 +79,7 @@ export default function AdminSettings() {
   };
 
   const sendTestEmail = async () => {
-    if (!testEmail) {
-      setTestStatus("Please enter a test email address.");
-      return;
-    }
+    if (!testEmail) return setTestStatus("Please enter a test email address.");
     try {
       const res = await fetch(`${API_URL}/email-settings/test`, {
         method: "POST",
@@ -81,14 +95,15 @@ export default function AdminSettings() {
   };
 
   const resetPassword = async () => {
-    if (!password) {
-      setMessage("Please enter a new password.");
-      return;
-    }
+    if (!password) return setMessage("Please enter a new password.");
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/admin/reset-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({ newPassword: password }),
       });
       if (!res.ok) throw new Error("Failed to reset password");
@@ -100,98 +115,96 @@ export default function AdminSettings() {
     }
   };
 
+  const addNewAdmin = async () => {
+    if (!newAdmin.username || !newAdmin.password)
+      return setMessage("Username and password required.");
+    try {
+      const res = await fetch(`${API_URL}/admin/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAdmin),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to add admin.");
+      setMessage("✅ New admin created!");
+      setNewAdmin({ username: "", password: "" });
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Error adding admin.");
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    navigate("/admin/login");
+  };
+
   return (
-    <div className="row admin-settings p-4">
-      {/* Mini Menu */}
-      <div className="col-md-3 border-end">
+    <div className="row admin-settings p-3 p-md-4">
+      {/* Sidebar */}
+      <div className="col-12 col-md-3 border-end mb-4 mb-md-0">
         <div className="list-group">
+          <div className="list-group-item disabled small">
+            Logged in as: <strong>{currentUser || "Loading..."}</strong>
+          </div>
           <button className={`list-group-item list-group-item-action ${activeTab === "smtp" ? "active bg-primary text-white" : ""}`} onClick={() => setActiveTab("smtp")}>
             SMTP Setup
           </button>
           <button className={`list-group-item list-group-item-action ${activeTab === "password" ? "active bg-primary text-white" : ""}`} onClick={() => setActiveTab("password")}>
             Reset Password
           </button>
+          <button className={`list-group-item list-group-item-action ${activeTab === "newadmin" ? "active bg-primary text-white" : ""}`} onClick={() => setActiveTab("newadmin")}>
+            Add New Admin
+          </button>
+          <button className="list-group-item list-group-item-action text-danger" onClick={logout}>
+            Logout
+          </button>
         </div>
       </div>
 
-      {/* Active Content */}
-      <div className="col-md-9">
+      {/* Content Area */}
+      <div className="col-12 col-md-9">
         <h3 className="text-primary mb-4">Admin Settings</h3>
-
-        {message && (
-          <div className={`alert ${message.includes("success") ? "alert-success" : "alert-danger"}`}>{message}</div>
-        )}
+        {message && <div className={`alert ${message.includes("success") || message.includes("✅") ? "alert-success" : "alert-danger"}`}>{message}</div>}
 
         {activeTab === "smtp" && (
           <>
             <div className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label">SMTP Host</label>
-                <input type="text" name="smtp_host" value={settings.smtp_host} onChange={handleChange} className="form-control" />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">SMTP Port</label>
-                <input type="number" name="smtp_port" value={settings.smtp_port} onChange={handleChange} className="form-control" />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">SMTP Username</label>
-                <input type="text" name="smtp_username" value={settings.smtp_username} onChange={handleChange} className="form-control" />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">SMTP Password</label>
-                <input type="password" name="smtp_password" value={settings.smtp_password} onChange={handleChange} className="form-control" />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Sender Email</label>
-                <input type="email" name="sender_email" value={settings.sender_email} onChange={handleChange} className="form-control" />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Sender Name</label>
-                <input type="text" name="sender_name" value={settings.sender_name} onChange={handleChange} className="form-control" />
-              </div>
+              {["smtp_host", "smtp_port", "smtp_username", "smtp_password", "sender_email", "sender_name"].map((key) => (
+                <div className="col-12 col-md-6" key={key}>
+                  <label className="form-label text-capitalize">{key.replace(/_/g, " ")}</label>
+                  <input
+                    type={key.includes("password") ? "password" : key.includes("port") ? "number" : "text"}
+                    name={key}
+                    value={settings[key]}
+                    onChange={handleChange}
+                    className="form-control"
+                  />
+                </div>
+              ))}
               <div className="col-12">
                 <label className="form-label">Email Subject</label>
                 <input type="text" name="email_subject" value={settings.email_subject} onChange={handleChange} className="form-control" />
               </div>
               <div className="col-12">
                 <label className="form-label">Email Body Template</label>
-                <textarea name="email_body" value={settings.email_body} onChange={handleChange} rows="5" className="form-control"></textarea>
-                <small className="text-muted">Use [LAST_NAME] as placeholder for user's last name.</small>
+                <textarea name="email_body" value={settings.email_body} onChange={handleChange} rows="4" className="form-control"></textarea>
               </div>
-
-              {/* ✅ New admin notification email field */}
               <div className="col-12">
                 <label className="form-label">Admin Notification Email</label>
-                <input
-                  type="email"
-                  name="admin_notification_email"
-                  value={settings.admin_notification_email}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="e.g. hr@midgard.com"
-                />
-                <small className="text-muted">This email will receive admin alerts (e.g. new submissions).</small>
+                <input type="email" name="admin_notification_email" value={settings.admin_notification_email} onChange={handleChange} className="form-control" />
               </div>
             </div>
 
-            <div className="text-end mt-4 d-flex justify-content-between align-items-center">
-              <div className="d-flex align-items-center gap-2">
-                <input
-                  type="email"
-                  className="form-control"
-                  placeholder="Enter email to send test"
-                  value={testEmail}
-                  onChange={(e) => setTestEmail(e.target.value)}
-                />
-                <button className="btn btn-outline-primary" onClick={sendTestEmail}>
-                  Send Test Email
-                </button>
+            <div className="mt-4 d-flex flex-column flex-md-row justify-content-between gap-3">
+              <div className="w-100 d-flex flex-column flex-md-row gap-2">
+                <input type="email" className="form-control" placeholder="Test email" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} />
+                <button className="btn btn-outline-primary" onClick={sendTestEmail}>Send Test</button>
               </div>
               <button className="btn btn-primary px-4 py-2" onClick={saveSMTPSettings} disabled={saving}>
                 {saving ? "Saving..." : "Save SMTP Settings"}
               </button>
             </div>
-
             {testStatus && <div className="alert mt-3 alert-info">{testStatus}</div>}
           </>
         )}
@@ -200,18 +213,26 @@ export default function AdminSettings() {
           <>
             <div className="mb-3">
               <label className="form-label">New Admin Password</label>
-              <input
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter new password"
-              />
+              <input type="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter new password" />
             </div>
             <div className="text-end">
-              <button className="btn btn-primary px-4" onClick={resetPassword}>
-                Reset Password
-              </button>
+              <button className="btn btn-primary px-4" onClick={resetPassword}>Reset Password</button>
+            </div>
+          </>
+        )}
+
+        {activeTab === "newadmin" && (
+          <>
+            <div className="mb-3">
+              <label className="form-label">New Username</label>
+              <input type="text" className="form-control" value={newAdmin.username} onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })} placeholder="Enter username" />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">New Password</label>
+              <input type="password" className="form-control" value={newAdmin.password} onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })} placeholder="Enter password" />
+            </div>
+            <div className="text-end">
+              <button className="btn btn-success" onClick={addNewAdmin}>Create Admin</button>
             </div>
           </>
         )}
