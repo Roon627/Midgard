@@ -23,7 +23,7 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (res.ok && data.token) {
-        // ✅ Store token for protected route access
+        // ✅ Store the token as "adminToken"
         localStorage.setItem("adminToken", data.token);
         // ✅ Navigate to dashboard
         navigate("/admin/dashboard");

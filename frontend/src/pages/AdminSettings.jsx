@@ -41,14 +41,23 @@ export default function AdminSettings() {
   };
 
   const fetchAdminStatus = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("adminToken");
     if (!token) return;
+
     try {
       const res = await fetch(`${API_URL}/admin/status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       const data = await res.json();
-      if (res.ok) setCurrentUser(data.user?.username || "Unknown");
+
+      if (res.ok && data?.user?.username) {
+        setCurrentUser(data.user.username);
+      } else {
+        console.error("Failed to fetch admin status:", data.message);
+        localStorage.removeItem("adminToken");
+        navigate("/admin/login");
+      }
     } catch (err) {
       console.error("Auth check failed:", err);
     }
@@ -96,8 +105,11 @@ export default function AdminSettings() {
 
   const resetPassword = async () => {
     if (!password) return setMessage("Please enter a new password.");
+
+    const token = localStorage.getItem("adminToken");
+    if (!token) return setMessage("Not authenticated. Please log in again.");
+
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/admin/reset-password`, {
         method: "POST",
         headers: {
@@ -106,6 +118,7 @@ export default function AdminSettings() {
         },
         body: JSON.stringify({ newPassword: password }),
       });
+
       if (!res.ok) throw new Error("Failed to reset password");
       setMessage("Admin password updated successfully!");
       setPassword("");
@@ -135,7 +148,7 @@ export default function AdminSettings() {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("adminToken");
     navigate("/admin/login");
   };
 
@@ -145,7 +158,7 @@ export default function AdminSettings() {
       <div className="col-12 col-md-3 border-end mb-4 mb-md-0">
         <div className="list-group">
           <div className="list-group-item disabled small">
-            Logged in as: <strong>{currentUser || "Loading..."}</strong>
+            Logged in as: <strong>{currentUser ?? "Not logged in"}</strong>
           </div>
           <button className={`list-group-item list-group-item-action ${activeTab === "smtp" ? "active bg-primary text-white" : ""}`} onClick={() => setActiveTab("smtp")}>
             SMTP Setup

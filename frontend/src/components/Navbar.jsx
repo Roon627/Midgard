@@ -8,6 +8,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useState, useEffect } from "react";
+import "../styles/Navbar.css";
 
 export default function Navbar() {
   const navigate = useNavigate();
