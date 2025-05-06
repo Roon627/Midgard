@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../data/api";
 import { exportSingleApplication } from "../utils/exportHelpers";
-import '../App.css';
+import "../styles/Applications.css";
 
 export default function Applications() {
   const [applications, setApplications] = useState([]);
@@ -48,49 +48,54 @@ export default function Applications() {
           <div className="spinner-border text-primary" role="status" />
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-hover align-middle">
-            <thead className="table-primary">
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Job Title</th>
-                <th>Submitted At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {applications.map(app => (
-                <tr key={app.id}>
-                  <td>{app.name}</td>
-                  <td>{app.email}</td>
-                  <td>{findJobTitle(app.jobId)}</td>
-                  <td>{new Date(app.createdAt).toLocaleString()}</td>
-                  <td>
-                    <button
-                      className="btn btn-outline-primary btn-sm me-2"
-                      onClick={() => setSelectedApp(app)}
-                    >
-                      View
-                    </button>
-                    <button
-                      className="btn btn-outline-success btn-sm me-2"
-                      onClick={() => exportApplication(app, "csv")}
-                    >
-                      Export CSV
-                    </button>
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={() => exportApplication(app, "pdf")}
-                    >
-                      Export PDF
-                    </button>
-                  </td>
+        <>
+          {/* Desktop Table View */}
+          <div className="d-none d-md-block">
+            <table className="table table-hover align-middle">
+              <thead className="table-primary">
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Job Title</th>
+                  <th>Submitted At</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {applications.map(app => (
+                  <tr key={app.id}>
+                    <td>{app.name}</td>
+                    <td>{app.email}</td>
+                    <td>{findJobTitle(app.jobId)}</td>
+                    <td>{new Date(app.createdAt).toLocaleString()}</td>
+                    <td>
+                      <button className="btn btn-outline-primary btn-sm me-2" onClick={() => setSelectedApp(app)}>View</button>
+                      <button className="btn btn-outline-success btn-sm me-2" onClick={() => exportApplication(app, "csv")}>Export CSV</button>
+                      <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplication(app, "pdf")}>Export PDF</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="d-block d-md-none">
+            {applications.map(app => (
+              <div key={app.id} className="mobile-app-card shadow-sm mb-3 rounded p-3 bg-white">
+                <h6 className="mb-2">{app.name}</h6>
+                <p className="mb-1"><strong>Email:</strong> {app.email}</p>
+                <p className="mb-1"><strong>Job:</strong> {findJobTitle(app.jobId)}</p>
+                <p className="mb-1"><strong>Submitted:</strong> {new Date(app.createdAt).toLocaleString()}</p>
+                <div className="d-flex flex-wrap gap-2 mt-2">
+                  <button className="btn btn-outline-primary btn-sm" onClick={() => setSelectedApp(app)}>View</button>
+                  <button className="btn btn-outline-success btn-sm" onClick={() => exportApplication(app, "csv")}>CSV</button>
+                  <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplication(app, "pdf")}>PDF</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* View Modal */}
