@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import StepTracker from "../common/StepTracker";
 
 const InterviewQuestions = ({
@@ -11,10 +11,106 @@ const InterviewQuestions = ({
   step,
   setStep
 }) => {
+  const [isPageComplete, setIsPageComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [visibilityWarning, setVisibilityWarning] = useState(false);
+  const [showDisabledReason, setShowDisabledReason] = useState(false);
+
+  const containerRef = useRef();
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: "auto" });
+    }
+  }, [step]);
+
+  useEffect(() => {
+    const devToolsCheck = () => {
+      const threshold = 160;
+      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+      const isDevToolsOpened = window.__REACT_DEVTOOLS_GLOBAL_HOOK__ || widthThreshold || heightThreshold;
+      if (isDevToolsOpened) {
+        alert("Developer tools detected. Please close them to continue the assessment.");
+      }
+    };
+    const interval = setInterval(devToolsCheck, 1000);
+
+    const keyCheck = (e) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J"))
+      ) {
+        alert("Developer tools or third-party tools are not allowed during the assessment. This action will be reported.");
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", keyCheck);
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("keydown", keyCheck);
+      document.removeEventListener("contextmenu", (e) => e.preventDefault());
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        setVisibilityWarning(true);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const offset = step === 3 ? 0 : step === 4 ? 10 : 20;
+    const count = step === 3 ? 10 : 10;
+    const complete = Array.from({ length: count }).every(
+      (_, i) => answers[offset + i]?.answer
+    );
+    setIsPageComplete(complete);
+  }, [answers, step]);
+
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
+  const handleSubmit = async () => {
+    if (!isPageComplete || !isOnline) {
+      setShowDisabledReason(true);
+      setTimeout(() => setShowDisabledReason(false), 3000);
+      return;
+    }
+    setIsSubmitting(true);
+    await handleUploadAndSubmit();
+    setIsSubmitting(false);
+  };
+
+  const handleNextClick = () => {
+    if (!isPageComplete || !isOnline) {
+      setShowDisabledReason(true);
+      setTimeout(() => setShowDisabledReason(false), 3000);
+    } else {
+      setStep(step + 1);
+    }
   };
 
   const renderIslamic = () => (
@@ -37,8 +133,8 @@ const InterviewQuestions = ({
                     type="radio"
                     name={`islamic-question-${i}`}
                     value={opt.text}
-                    checked={answers[i] === opt.text}
-                    onChange={(e) => handleChange(i, e.target.value)}
+                    checked={answers[i]?.answer === opt.text}
+                    onChange={() => handleChange(i, opt.text, opt.points)}
                     className="form-check-input"
                   />
                   <label
@@ -84,8 +180,15 @@ const InterviewQuestions = ({
                         type="radio"
                         name={`personality-question-${questionIndex}`}
                         value={opt.text}
-                        checked={answers[questionIndex] === opt.text}
-                        onChange={(e) => handleChange(questionIndex, e.target.value)}
+                        checked={answers[questionIndex]?.answer === opt.text}
+                        onChange={() =>
+                          handleChange(
+                            questionIndex,
+                            opt.text,
+                            opt.points,
+                            opt.traits || {}
+                          )
+                        }
                         className="form-check-input"
                       />
                       <label
@@ -106,7 +209,7 @@ const InterviewQuestions = ({
   };
 
   return (
-    <div className="container py-4">
+    <div className="container py-4" ref={containerRef}>
       <div className="card shadow-sm border-0">
         <div className="card-header bg-primary text-white p-3 d-flex justify-content-between">
           <h2 className="m-0">Interview Questions</h2>
@@ -121,10 +224,26 @@ const InterviewQuestions = ({
         </div>
 
         <div className="card-body p-4">
+          {!isOnline && (
+            <div className="alert alert-danger">
+              <strong>You're offline:</strong> Internet connection is required to continue.
+            </div>
+          )}
+
+          {visibilityWarning && (
+            <div className="alert alert-info">
+              <strong>Tab Switch Detected:</strong> We kindly request that you remain on this tab and refrain from using external tools during the assessment.
+            </div>
+          )}
+
+          {showDisabledReason && (
+            <div className="alert alert-warning">
+              Please complete all questions on this page and ensure you are online to proceed.
+            </div>
+          )}
+
           <div className="alert alert-warning">
-            <strong>Important:</strong> You have{" "}
-            {Math.floor(timeLeft / 60)} minutes and {timeLeft % 60} seconds remaining.
-            The form will be automatically submitted when the timer expires.
+            <strong>Important:</strong> You have {Math.floor(timeLeft / 60)} minutes and {timeLeft % 60} seconds remaining. The form will be automatically submitted when the timer expires.
           </div>
 
           <div className="question-container mb-5">
@@ -136,19 +255,21 @@ const InterviewQuestions = ({
           <div className="d-grid mt-4">
             {step < 5 ? (
               <button
-                type="button" // ✅ added type to prevent implicit submit
-                onClick={() => setStep(step + 1)}
-                className="btn btn-gradient-next py-2"
+                type="button"
+                onClick={handleNextClick}
+                className="btn btn-gradient py-2 fw-semibold shadow-sm"
+                disabled={!isPageComplete || !isOnline}
               >
                 Next →
               </button>
             ) : (
               <button
-                type="button" // ✅ added type to prevent implicit submit
-                onClick={handleUploadAndSubmit}
-                className="btn btn-success py-2"
+                type="button"
+                onClick={handleSubmit}
+                className="btn btn-gradient py-2 fw-semibold shadow-sm"
+                disabled={isSubmitting || !isOnline}
               >
-                Submit Answers
+                {isSubmitting ? "Submitting..." : "Submit Answers"}
               </button>
             )}
           </div>

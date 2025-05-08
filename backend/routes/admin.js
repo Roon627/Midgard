@@ -22,7 +22,6 @@ router.post("/login", (req, res) => {
       if (err) return res.status(500).json({ error: err.message });
       if (!match) return res.status(401).json({ message: "Invalid credentials." });
 
-      // Sign JWT token
       const token = jwt.sign(
         { username: admin.username, id: admin.id },
         JWT_SECRET,
@@ -52,6 +51,16 @@ router.post("/add", async (req, res) => {
         }
         return res.status(500).json({ error: err.message });
       }
+
+      // System notification
+      db.run(
+        `INSERT INTO notifications (type, title, message, createdAt) VALUES (?, ?, ?, datetime('now'))`,
+        ["system", "New Admin Added", `Admin account created: ${username}`],
+        (notifErr) => {
+          if (notifErr) console.error("Notification insert error:", notifErr);
+        }
+      );
+
       res.status(201).json({ message: "Admin created", id: this.lastID });
     }
   );
@@ -59,7 +68,6 @@ router.post("/add", async (req, res) => {
 
 // ===================== JWT Middleware =====================
 
-// Protect all routes below with JWT authentication
 router.use((req, res, next) => {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "No token provided" });
@@ -67,7 +75,6 @@ router.use((req, res, next) => {
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ message: "Invalid token" });
 
-    // Attach decoded token payload to request
     req.admin = decoded;
     next();
   });
@@ -96,6 +103,15 @@ router.post("/reset-password", async (req, res) => {
           return res.status(404).json({ message: "Admin not found." });
         }
 
+        // System notification
+        db.run(
+          `INSERT INTO notifications (type, title, message, createdAt) VALUES (?, ?, ?, datetime('now'))`,
+          ["system", "Password Reset", `Admin ${decoded.username} reset their password.`],
+          (notifErr) => {
+            if (notifErr) console.error("Notification insert error:", notifErr);
+          }
+        );
+
         res.json({ message: "Password updated successfully." });
       }
     );
@@ -105,9 +121,8 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// Route to check admin login status (used in frontend)
+// Route to check admin login status
 router.get("/status", (req, res) => {
-  // Return the admin info as "user" to match frontend expectations
   return res.json({ user: req.admin });
 });
 

@@ -1,217 +1,192 @@
 /* AdminDashboard.css */
 
 .admin-dashboard-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2rem;
-    padding: 2rem;
-  }
-  
-  /* Sidebar */
-  .admin-sidebar {
-    width: 200px;
-    background: linear-gradient(180deg, #d1c4e9 0%, #b39ddb 100%);
-    padding: 1rem;
-    color: white;
-    border-radius: 8px;
-    flex-shrink: 0;
-    align-self: flex-start; /* prevents sidebar from stretching full height */
-  }
-  
-  .admin-sidebar-header {
-    text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-    font-weight: bold;
-  }
-  
-  .admin-nav {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .admin-nav-item {
-    padding: 10px;
-    margin-bottom: 8px;
-    text-align: center;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 0.95rem;
-    color: #fff;
-  }
-  
-  .admin-nav-item:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-  }
-  
-  .admin-nav-item.active {
-    background-color: rgba(255, 255, 255, 0.3);
-    font-weight: bold;
-  }
-  
-  /* Main Content */
-  .admin-content {
-    flex: 1;
-    min-width: 300px;
-    max-width: 1000px;
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Header */
-  .admin-content-header {
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+/* Sidebar */
+.admin-sidebar {
+  width: 200px;
+  background: linear-gradient(180deg, #d1c4e9 0%, #b39ddb 100%);
+  padding: 1rem;
+  color: white;
+  border-radius: 8px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.admin-sidebar-header {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  font-weight: bold;
+}
+
+.admin-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-nav-item {
+  padding: 10px;
+  margin-bottom: 8px;
+  text-align: center;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.admin-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-nav-item.active {
+  background-color: rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+}
+
+/* Main Content */
+.admin-content {
+  flex: 1;
+  min-width: 300px;
+  max-width: 1000px;
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+.admin-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-content-header h2 {
+  font-size: 2rem;
+  color: var(--primary-color-dark);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+}
+
+/* General Table Container */
+.admin-table-wrapper {
+  margin-top: 1rem;
+}
+
+/* Search Input */
+.search-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Add Job / Card Input Form */
+.card {
+  background: #fafafa;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.card h5 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Dashboard Stats */
+.dashboard-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-card {
+  background-color: #f3e5f5;
+  border-left: 6px solid var(--primary-color);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.dashboard-card h5 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #444;
+}
+
+.dashboard-card h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color-dark);
+  margin-top: 0.5rem;
+}
+
+/* Recent Updates */
+.recent-updates {
+  background-color: #faf8fd;
+  border-left: 4px solid var(--primary-color-dark);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.recent-updates h5 {
+  font-size: 1.2rem;
+  color: var(--primary-color-dark);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.recent-updates .update-item {
+  background: #f9f1ff;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 6px;
+  border-left: 4px solid #66bb6a;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-dashboard-wrapper {
+    flex-direction: column;
     align-items: center;
-    margin-bottom: 2rem;
-  }
-  
-  .admin-content-header h2 {
-    font-size: 2rem;
-    color: var(--primary-color-dark);
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 0.5rem;
-  }
-  
-  /* Job Section */
-  .admin-table-wrapper {
-    margin-top: 1rem;
-  }
-  
-  .admin-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-  }
-  
-  .admin-table th,
-  .admin-table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .admin-table th {
-    background-color: #ede7f6;
-    font-weight: bold;
-  }
-  
-  .admin-table tbody tr:hover {
-    background-color: #f3e5f5;
-  }
-  
-  .search-input {
-    width: 100%;
-    max-width: 300px;
-    padding: 10px;
-    margin-bottom: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-  }
-  
-  .card {
-    background: #fafafa;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
-  
-  .card h5 {
-    font-weight: 600;
-    margin-bottom: 1rem;
-  }
-  
-  /* Dashboard Stats */
-  .dashboard-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-bottom: 2rem;
-  }
-  
-  .dashboard-card {
-    background-color: #f3e5f5;
-    border-left: 6px solid var(--primary-color);
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    min-width: 200px;
-  }
-  
-  .dashboard-card h5 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #444;
-  }
-  
-  .dashboard-card h2 {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--primary-color-dark);
-    margin-top: 0.5rem;
-  }
-  
-  /* Recent Updates */
-  .recent-updates {
-    background-color: #faf8fd;
-    border-left: 4px solid var(--primary-color-dark);
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  }
-  
-  .recent-updates h5 {
-    font-size: 1.2rem;
-    color: var(--primary-color-dark);
-    margin-bottom: 1rem;
-    font-weight: 600;
-  }
-  
-  .recent-updates .update-item {
-    background: #f9f1ff;
     padding: 1rem;
-    margin-bottom: 0.75rem;
-    border-radius: 6px;
-    border-left: 4px solid #66bb6a;
-    font-size: 0.95rem;
-    line-height: 1.4;
-  }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-    .admin-dashboard-wrapper {
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem;
-    }
-  
-    .admin-sidebar {
-      width: 100%;
-      text-align: center;
-    }
-  
-    .admin-content {
-      width: 100%;
-      padding: 1.5rem;
-    }
-  
-    .dashboard-cards {
-      flex-direction: column;
-      gap: 1rem;
-    }
-  
-    .admin-table th,
-    .admin-table td {
-      font-size: 0.95rem;
-    }
-  
-    .admin-nav-item {
-      font-size: 1rem;
-    }
   }
 
-  
+  .admin-sidebar {
+    width: 100%;
+    text-align: center;
+  }
+
+  .admin-content {
+    width: 100%;
+    padding: 1.5rem;
+  }
+
+  .dashboard-cards {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .admin-nav-item {
+    font-size: 1rem;
+  }
+}

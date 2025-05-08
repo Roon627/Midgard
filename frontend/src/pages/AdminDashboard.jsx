@@ -4,6 +4,7 @@ import { exportApplicants } from "../utils/exportHelpers";
 import AdminSettings from "./AdminSettings";
 import Applications from "./Applications";
 import NotificationsPanel from "../components/admin/NotificationsPanel";
+import JobList from "./JobList";
 import "../styles/AdminDashboard.css";
 
 export default function AdminDashboard() {
@@ -178,6 +179,7 @@ export default function AdminDashboard() {
                     <button className="btn btn-success" onClick={createNewJob}>Submit</button>
                   </div>
                 )}
+
                 <input
                   type="text"
                   placeholder="Search Jobs..."
@@ -185,56 +187,18 @@ export default function AdminDashboard() {
                   onChange={e => setSearchTerm(e.target.value)}
                   className="search-input mb-3"
                 />
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Title</th>
-                      <th>Description</th>
-                      <th>Expires</th>
-                      <th>Applicants</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredJobs.map(job => {
-                      const applicantCount = applications.filter(a => a.jobId === job.id).length;
-                      return (
-                        <tr key={job.id}>
-                          <td>
-                            {editingJobId === job.id
-                              ? <input value={editedJob.title} onChange={e => setEditedJob({ ...editedJob, title: e.target.value })} />
-                              : job.title}
-                          </td>
-                          <td>
-                            {editingJobId === job.id
-                              ? <input value={editedJob.description} onChange={e => setEditedJob({ ...editedJob, description: e.target.value })} />
-                              : job.description.slice(0, 40) + "..."}
-                          </td>
-                          <td>
-                            {editingJobId === job.id
-                              ? <input type="datetime-local" value={editedJob.expiresAt} onChange={e => setEditedJob({ ...editedJob, expiresAt: e.target.value })} />
-                              : new Date(job.expiresAt).toLocaleDateString()}
-                          </td>
-                          <td>{applicantCount}</td>
-                          <td>
-                            {editingJobId === job.id ? (
-                              <>
-                                <button className="btn btn-success btn-sm me-1" onClick={() => saveEditedJob(job.id)}>Save</button>
-                                <button className="btn btn-secondary btn-sm" onClick={cancelEditing}>Cancel</button>
-                              </>
-                            ) : (
-                              <>
-                                <button className="btn btn-outline-primary btn-sm me-1" onClick={() => startEditing(job)}>Edit</button>
-                                <button className="btn btn-outline-success btn-sm me-1" onClick={() => exportApplicants({ jobId: job.id, applications, jobs, format: 'csv' })}>CSV</button>
-                                <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplicants({ jobId: job.id, applications, jobs, format: 'pdf' })}>PDF</button>
-                              </>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+
+                <JobList
+                  jobs={filteredJobs}
+                  applications={applications}
+                  editingJobId={editingJobId}
+                  editedJob={editedJob}
+                  startEditing={startEditing}
+                  cancelEditing={cancelEditing}
+                  saveEditedJob={saveEditedJob}
+                  setEditedJob={setEditedJob}
+                  exportApplicants={exportApplicants}
+                />
               </div>
             )}
 

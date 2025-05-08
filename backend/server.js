@@ -5,6 +5,7 @@ const cors = require("cors");
 const multer = require("multer");
 const nodemailer = require("nodemailer");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const db = require("./db");
@@ -16,13 +17,16 @@ const submissionsRouter = require("./routes/submissions");
 const emailSettingsRouter = require("./routes/emailSettings");
 const notificationsRouter = require("./routes/notifications");
 
-// ====== Middleware ======
+// ====== CORS Setup ======
+const allowedOrigin = process.env.FRONTEND_URL;
 
 app.use(cors({
-  origin: true,
+  origin: allowedOrigin,
   credentials: true,
 }));
 
+
+// ====== Middleware ======
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -33,14 +37,16 @@ app.use(session({
 }));
 
 // ====== Routes ======
-
-// ✅ Single Admin Route — token protection handled in adminRouter
 app.use("/api/admin", adminRouter);
-
 app.use("/api/jobs", jobsRouter);
 app.use("/api/submissions", submissionsRouter);
 app.use("/api/email-settings", emailSettingsRouter);
 app.use("/api/notifications", notificationsRouter);
+
+// ====== Ensure Upload Folder ======
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
 // ====== Static uploads ======
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -105,5 +111,6 @@ app.get("/api/ping", (req, res) => {
 // ====== Start Server ======
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Backend running on port ${PORT}`);
+  console.log(`✅ Backend running on http://localhost:${PORT}`);
 });
+

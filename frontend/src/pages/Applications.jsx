@@ -41,6 +41,19 @@ export default function Applications() {
     });
   };
 
+  const calculateIslamicScore = (answers = []) => {
+    const first10 = answers.slice(0, 10);
+    const correctCount = first10.filter(
+      (a) =>
+        a &&
+        typeof a === "object" &&
+        a.answer &&
+        a.correctAnswer &&
+        a.answer.trim().toLowerCase() === a.correctAnswer.trim().toLowerCase()
+    ).length;
+    return `${correctCount}/10`;
+  };
+
   return (
     <div className="container py-4">
       {isLoading ? (
@@ -87,6 +100,12 @@ export default function Applications() {
                 <p className="mb-1"><strong>Email:</strong> {app.email}</p>
                 <p className="mb-1"><strong>Job:</strong> {findJobTitle(app.jobId)}</p>
                 <p className="mb-1"><strong>Submitted:</strong> {new Date(app.createdAt).toLocaleString()}</p>
+                {app.personalityScore != null && (
+                  <>
+                    <p className="mb-1 text-primary"><strong>Score:</strong> {app.personalityScore}</p>
+                    <p className="mb-1 text-muted"><strong>Category:</strong> {app.scoreCategory}</p>
+                  </>
+                )}
                 <div className="d-flex flex-wrap gap-2 mt-2">
                   <button className="btn btn-outline-primary btn-sm" onClick={() => setSelectedApp(app)}>View</button>
                   <button className="btn btn-outline-success btn-sm" onClick={() => exportApplication(app, "csv")}>CSV</button>
@@ -116,6 +135,27 @@ export default function Applications() {
                   <li className="list-group-item"><strong>National ID:</strong> {selectedApp.nationalId}</li>
                   <li className="list-group-item"><strong>Job Title:</strong> {findJobTitle(selectedApp.jobId)}</li>
                   <li className="list-group-item"><strong>Submitted At:</strong> {new Date(selectedApp.createdAt).toLocaleString()}</li>
+                  <li className="list-group-item">
+                    <strong>Islamic Knowledge:</strong> {calculateIslamicScore(selectedApp.answers)}
+                  </li>
+                  {selectedApp.personalityScore != null && (
+                    <>
+                      <li className="list-group-item"><strong>Personality Score:</strong> {selectedApp.personalityScore}</li>
+                      <li className="list-group-item"><strong>Score Category:</strong> {selectedApp.scoreCategory}</li>
+                    </>
+                  )}
+                  {selectedApp.traitScores && typeof selectedApp.traitScores === "object" && (
+                    <li className="list-group-item">
+                      <strong>Trait Breakdown:</strong>
+                      <ul className="mt-2 mb-0">
+                        {Object.entries(selectedApp.traitScores).map(([trait, value]) => (
+                          <li key={trait}>
+                            <span className="badge bg-secondary me-2">{trait}:</span> {value}
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  )}
                 </ul>
 
                 <h6 className="text-primary">Interview Answers</h6>
@@ -131,6 +171,11 @@ export default function Applications() {
                               <strong>Correct Answer:</strong> {answer.correctAnswer}
                             </span>
                           )}
+                          {answer.points != null && (
+                            <span className="text-info ms-3">
+                              <strong>Points:</strong> {answer.points}
+                            </span>
+                          )}
                         </>
                       ) : (
                         <>
@@ -142,9 +187,7 @@ export default function Applications() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setSelectedApp(null)}>
-                  Close
-                </button>
+                <button className="btn btn-secondary" onClick={() => setSelectedApp(null)}>Close</button>
               </div>
             </div>
           </div>

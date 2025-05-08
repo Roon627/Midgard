@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import './index.css';                      // Global styles
-import './App.css';                        // App-specific styles
+import "./styles/index.css";                   // Global styles
+import "./styles/App.css";                       // App-specific styles
 import 'bootstrap/dist/css/bootstrap.min.css';  // Bootstrap
 import 'font-awesome/css/font-awesome.min.css'; // Font Awesome
 
@@ -16,6 +16,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSubmissions from "./pages/AdminSubmissions";
 import AdminSettings from "./pages/AdminSettings";
+
 
 // 🔐 Admin route protection
 import ProtectedAdminRoute from "./components/auth/ProtectedAdminRoute";
@@ -35,7 +36,7 @@ function App() {
             <Route path="/interview/:jobId" element={<Interview />} />
             <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* 🔐 Protected Admin Routes */}
+            {/*Protected Admin Routes */}
             <Route
               path="/admin/dashboard"
               element={

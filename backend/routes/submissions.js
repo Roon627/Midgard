@@ -6,7 +6,7 @@ const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
-// Setup multer for file uploads
+// Multer setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -25,33 +25,46 @@ router.post("/", upload.fields([
   { name: "reference_documents", maxCount: 1 }
 ]), async (req, res) => {
   try {
-    const { jobId, name, nationalId, passport, questionAnswers, email, phoneNumber } = req.body;
+    const {
+      jobId,
+      name,
+      nationalId,
+      passport,
+      questionAnswers,
+      email,
+      phoneNumber,
+      personalityScore,
+      scoreCategory,
+      traitScores
+    } = req.body;
     const files = req.files;
 
     if (!jobId || !name || !questionAnswers) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Parse and validate answers
+    // Parse answers
     let parsedQuestionAnswers;
     try {
       parsedQuestionAnswers = JSON.parse(questionAnswers);
-      if (!Array.isArray(parsedQuestionAnswers) || !parsedQuestionAnswers.every(item =>
-        typeof item === 'object' &&
-        'question' in item &&
-        'answer' in item &&
-        'score' in item
-      )) {
+      if (!Array.isArray(parsedQuestionAnswers)) {
         return res.status(400).json({ error: "Invalid questionAnswers format" });
       }
-    } catch (error) {
+    } catch (err) {
       return res.status(400).json({ error: "Failed to parse questionAnswers" });
+    }
+
+    // Parse traitScores
+    let parsedTraitScores = {};
+    try {
+      parsedTraitScores = traitScores ? JSON.parse(traitScores) : {};
+    } catch (err) {
+      return res.status(400).json({ error: "Failed to parse traitScores" });
     }
 
     const identifier = nationalId || passport || '';
     const idField = nationalId ? 'nationalId' : 'passport';
 
-    // Check for duplicate submission
     const existing = await new Promise((resolve, reject) => {
       db.get(
         `SELECT id FROM submissions WHERE jobId = ? AND ${idField} = ?`,
@@ -68,8 +81,10 @@ router.post("/", upload.fields([
 
     db.run(`
       INSERT INTO submissions
-      (jobId, name, email, phoneNumber, nationalId, passport, answers, resumePath, certificatesPath, idCardPath, policeReportPath, additionalDocumentsPath, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (jobId, name, email, phoneNumber, nationalId, passport, answers,
+       resumePath, certificatesPath, idCardPath, policeReportPath, additionalDocumentsPath,
+       personalityScore, scoreCategory, traitScores, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         jobId,
         name,
@@ -83,6 +98,9 @@ router.post("/", upload.fields([
         files?.id_card?.[0]?.path || '',
         files?.police_report?.[0]?.path || '',
         files?.reference_documents?.[0]?.path || '',
+        personalityScore || null,
+        scoreCategory || '',
+        JSON.stringify(parsedTraitScores),
         createdAt
       ],
       function (err) {
@@ -94,7 +112,6 @@ router.post("/", upload.fields([
         const submissionId = this.lastID;
         console.log("New submission inserted with ID:", submissionId);
 
-        // Add to notification table
         const noteMessage = `New application received from ${name}.`;
         db.run(
           `INSERT INTO notifications (type, message, createdAt) VALUES (?, ?, ?)`,
@@ -104,7 +121,6 @@ router.post("/", upload.fields([
           }
         );
 
-        // Send email to applicant
         db.get("SELECT * FROM email_settings WHERE id = 1", [], (err, settings) => {
           if (err || !settings) {
             console.error("Failed to fetch email settings:", err);
@@ -134,7 +150,6 @@ router.post("/", upload.fields([
                 .replace("[JOB_TITLE]", jobRow.title);
               const emailSubject = settings.email_subject.replace("[JOB_TITLE]", jobRow.title);
 
-              // Send to applicant
               await transporter.sendMail({
                 from: `"${settings.sender_name}" <${settings.sender_email}>`,
                 to: email,
@@ -142,10 +157,9 @@ router.post("/", upload.fields([
                 text: emailBody,
               });
 
-              // Send to admin
               await transporter.sendMail({
                 from: `"${settings.sender_name}" <${settings.sender_email}>`,
-                to: "hr@midgard.com", // or make this configurable
+                to: "hr@midgard.com",
                 subject: "New Job Application Received",
                 text: `A new application has been submitted by ${name} for ${jobRow.title}.`,
               });
@@ -166,7 +180,6 @@ router.post("/", upload.fields([
   }
 });
 
-// Get all submissions
 router.get("/", (req, res) => {
   db.all("SELECT * FROM submissions", [], (err, rows) => {
     if (err) {
@@ -177,12 +190,12 @@ router.get("/", (req, res) => {
       rows.map((row) => ({
         ...row,
         answers: JSON.parse(row.answers || '[]'),
+        traitScores: row.traitScores ? JSON.parse(row.traitScores) : undefined
       }))
     );
   });
 });
 
-// Check for existing application
 router.post("/check-application", (req, res) => {
   const { jobId, identifierType, identifierValue } = req.body;
 

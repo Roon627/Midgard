@@ -11,6 +11,8 @@ import InterviewQuestions from "../components/interview/InterviewQuestions";
 import ThankYouScreen from "../components/interview/ThankYouScreen";
 import AssessmentNotice from "../components/interview/AssessmentNotice";
 import { validatePassportNumber } from "../utils/passportValidators";
+import shuffleArray from "../utils/shuffleArray";
+
 
 export default function Interview() {
   const { jobId } = useParams();
@@ -63,7 +65,6 @@ export default function Interview() {
   useEffect(() => {
     if (started) {
       const shuffledIslamic = shuffleArray(islamicKnowledge).slice(0, 10);
-
       const sets = Object.values(personalityAssessment.sets);
       const randomSet = shuffleArray(sets)[0];
       const shuffledPersonality = shuffleArray(randomSet).slice(0, 20);
@@ -71,28 +72,26 @@ export default function Interview() {
       setIslamicQuestions(shuffledIslamic);
       setPersonalityQs(shuffledPersonality);
 
-      // Debug: Log islamicQuestions to verify data
-      console.log("Islamic Questions:", shuffledIslamic);
-
       const allQuestions = [...shuffledIslamic, ...shuffledPersonality];
       const initialPairs = allQuestions.map((q, index) => ({
         question: q.question,
         answer: "",
         correctAnswer: q.correctAnswer || "",
-        type: index < 10 ? "islamic" : "personality"
+        type: index < 10 ? "islamic" : "personality",
+        points: null,
+        traits: null
       }));
 
       setQuestionAnswerPairs(initialPairs);
       const initialAnswers = {};
       allQuestions.forEach((_, index) => {
-        initialAnswers[index] = "";
+        initialAnswers[index] = { answer: "", points: null, traits: null };
       });
       setAnswers(initialAnswers);
 
       setCurrentStep(3);
     }
   }, [started]);
-
   useEffect(() => {
     if (currentStep < 3 || submitted || timeLeft <= 0) return;
     const timer = setInterval(() => {
@@ -114,20 +113,20 @@ export default function Interview() {
     };
   }, []);
 
-  const shuffleArray = (array) => {
-    const arrayCopy = [...array];
-    for (let i = arrayCopy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arrayCopy[i], arrayCopy[j]] = [arrayCopy[j], arrayCopy[i]];
-    }
-    return arrayCopy;
-  };
+  const handleChange = (index, value, points, traits) => {
+    setAnswers(prev => ({
+      ...prev,
+      [index]: { answer: value, points, traits }
+    }));
 
-  const handleChange = (index, value) => {
-    setAnswers(prev => ({ ...prev, [index]: value }));
     setQuestionAnswerPairs(prev => {
       const newPairs = [...prev];
-      newPairs[index] = { ...newPairs[index], answer: value };
+      newPairs[index] = {
+        ...newPairs[index],
+        answer: value,
+        points,
+        traits
+      };
       return newPairs;
     });
   };
@@ -169,7 +168,6 @@ export default function Interview() {
       setCheckingApplication(false);
     }
   };
-
   const handleIdentifierChange = (e, field) => {
     const value = e.target.value;
     setUserInfo({ ...userInfo, [field]: value });
@@ -222,31 +220,58 @@ export default function Interview() {
     setCurrentStep(2.5);
     setError("");
   };
-
   const handleUploadAndSubmit = async () => {
     try {
+      const traitScores = {};
+      let totalPoints = 0;
+
+      questionAnswerPairs.forEach((q) => {
+        if (q.type === "personality" && q.traits) {
+          for (const trait in q.traits) {
+            traitScores[trait] = (traitScores[trait] || 0) + q.traits[trait];
+            totalPoints += q.traits[trait];
+          }
+        }
+      });
+
+      let scoreCategory = "";
+      if (totalPoints >= 80) scoreCategory = "Excellent fit for leadership/strategic roles";
+      else if (totalPoints >= 60) scoreCategory = "Good fit for structured, team-based roles";
+      else if (totalPoints >= 40) scoreCategory = "Some alignment; may need guidance";
+      else scoreCategory = "May not align well with company culture";
+
       const formData = new FormData();
-      formData.append('jobId', parseInt(jobId));
-      formData.append('name', `${userInfo.firstName} ${userInfo.lastName}`);
-      formData.append('email', userInfo.email);
-      formData.append('phoneNumber', userInfo.phone || '');
+      formData.append("jobId", parseInt(jobId));
+      formData.append("name", `${userInfo.firstName} ${userInfo.lastName}`);
+      formData.append("email", userInfo.email);
+      formData.append("phoneNumber", userInfo.phone || "");
       if (userInfo.nationality === "Maldives") {
-        formData.append('nationalId', userInfo.nationalId);
+        formData.append("nationalId", userInfo.nationalId);
       } else {
-        formData.append('passport', userInfo.passport);
+        formData.append("passport", userInfo.passport);
       }
+
       const submissionData = questionAnswerPairs.map(pair => ({
         question: pair.question,
         answer: pair.answer,
         correctAnswer: pair.correctAnswer || "",
-        score: null
+        score: null,
+        points: pair.points || null,
+        type: pair.type,
+        traits: pair.traits || null
       }));
+
       formData.append("questionAnswers", JSON.stringify(submissionData));
+      formData.append("personalityScore", totalPoints);
+      formData.append("scoreCategory", scoreCategory);
+      formData.append("traitScores", JSON.stringify(traitScores));
+
       if (files.cv) formData.append("resume", files.cv);
       if (files.certificates) formData.append("certificates", files.certificates);
       if (files.idCard) formData.append("id_card", files.idCard);
       if (files.policeReport) formData.append("police_report", files.policeReport);
       if (files.references) formData.append("reference_documents", files.references);
+
       const res = await fetch(`${API_URL}/submissions`, { method: "POST", body: formData });
       if (!res.ok) throw new Error("Failed to submit.");
       setUploadDone(true);

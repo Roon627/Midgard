@@ -1,9 +1,10 @@
 import React from 'react';
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram } from 'react-icons/fa';
+import '../styles/Footer.css'; 
 
 export default function Footer() {
   return (
-    <footer className="footer py-3" style={{ backgroundColor: "#1e3a8a", position: "relative", zIndex: "1" }}>
+    <footer className="footer py-3 bg-primary position-relative" style={{ zIndex: 1 }}>
       <div className="container">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
           {/* Copyright */}
@@ -18,15 +19,7 @@ export default function Footer() {
               target="_blank" 
               rel="noopener noreferrer" 
               className="social-icon d-flex justify-content-center align-items-center rounded-circle"
-              style={{ 
-                width: '36px', 
-                height: '36px', 
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#4f46e5'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              aria-label="Facebook"
             >
               <FaFacebookF />
             </a>
@@ -35,15 +28,7 @@ export default function Footer() {
               target="_blank" 
               rel="noopener noreferrer" 
               className="social-icon d-flex justify-content-center align-items-center rounded-circle"
-              style={{ 
-                width: '36px', 
-                height: '36px', 
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#4f46e5'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              aria-label="Twitter"
             >
               <FaTwitter />
             </a>
@@ -52,15 +37,7 @@ export default function Footer() {
               target="_blank" 
               rel="noopener noreferrer" 
               className="social-icon d-flex justify-content-center align-items-center rounded-circle"
-              style={{ 
-                width: '36px', 
-                height: '36px', 
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#4f46e5'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              aria-label="LinkedIn"
             >
               <FaLinkedinIn />
             </a>
@@ -69,15 +46,7 @@ export default function Footer() {
               target="_blank" 
               rel="noopener noreferrer" 
               className="social-icon d-flex justify-content-center align-items-center rounded-circle"
-              style={{ 
-                width: '36px', 
-                height: '36px', 
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#4f46e5'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+              aria-label="Instagram"
             >
               <FaInstagram />
             </a>
