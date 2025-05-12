@@ -1,18 +1,28 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const db = require("../db");
 const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
-// Multer setup
+// Multer storage setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    const { name, nationalId, passport } = req.body;
+    const identifier = nationalId || passport || "unknown";
+    const safeName = name ? name.replace(/[^a-z0-9]/gi, "_").toLowerCase() : "anonymous";
+    const dir = path.join("uploads", `${safeName}_${identifier}`);
+
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
+    const sanitizedFilename = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, Date.now() + '-' + sanitizedFilename);
   },
 });
 const upload = multer({ storage: storage });
@@ -43,7 +53,6 @@ router.post("/", upload.fields([
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Parse answers
     let parsedQuestionAnswers;
     try {
       parsedQuestionAnswers = JSON.parse(questionAnswers);
@@ -54,7 +63,6 @@ router.post("/", upload.fields([
       return res.status(400).json({ error: "Failed to parse questionAnswers" });
     }
 
-    // Parse traitScores
     let parsedTraitScores = {};
     try {
       parsedTraitScores = traitScores ? JSON.parse(traitScores) : {};
@@ -159,7 +167,7 @@ router.post("/", upload.fields([
 
               await transporter.sendMail({
                 from: `"${settings.sender_name}" <${settings.sender_email}>`,
-                to: "hr@midgard.com",
+                to: "runharun627@gmail.com",
                 subject: "New Job Application Received",
                 text: `A new application has been submitted by ${name} for ${jobRow.title}.`,
               });
@@ -216,6 +224,58 @@ router.post("/check-application", (req, res) => {
       return res.json({ exists: !!row });
     }
   );
+});
+
+// Return document file list for a submission
+router.get("/:id/documents", (req, res) => {
+  const submissionId = parseInt(req.params.id);
+  if (isNaN(submissionId)) {
+    return res.status(400).json({ error: "Invalid submission ID" });
+  }
+
+  db.get("SELECT name, nationalId, passport FROM submissions WHERE id = ?", [submissionId], (err, row) => {
+    if (err || !row) {
+      console.error("Submission not found:", err);
+      return res.status(404).json({ error: "Submission not found" });
+    }
+
+    const identifier = row.nationalId || row.passport;
+    const safeName = row.name ? row.name.replace(/[^a-z0-9]/gi, "_").toLowerCase() : "anonymous";
+    const folderPath = path.join("uploads", `${safeName}_${identifier}`);
+    const baseUrl = process.env.BACKEND_PUBLIC_URL || `http://localhost:${process.env.PORT || 5000}`;
+
+    if (!fs.existsSync(folderPath)) {
+      return res.json([]);
+    }
+
+    try {
+      const files = fs.readdirSync(folderPath);
+      const fileUrls = files
+        .filter(filename => {
+          const filePath = path.join(folderPath, filename);
+          const exists = fs.existsSync(filePath);
+          if (!exists) {
+            console.warn(`File listed but not found on server: ${filePath}`);
+          }
+          return exists; // Only include files that exist
+        })
+        .map(filename => {
+          const stats = fs.statSync(path.join(folderPath, filename));
+          return {
+            name: filename,
+            url: `${baseUrl}/uploads/${safeName}_${identifier}/${filename}`,
+            size: stats.size,
+            uploadedAt: stats.ctime
+          };
+        });
+
+      console.log(`Returning ${fileUrls.length} documents for submission ${submissionId}`);
+      res.json(fileUrls);
+    } catch (fsErr) {
+      console.error("Error reading directory:", fsErr);
+      res.status(500).json({ error: "Failed to retrieve documents" });
+    }
+  });
 });
 
 module.exports = router;

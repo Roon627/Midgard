@@ -12,7 +12,6 @@ const DocumentUploadForm = ({ files, handleFileChange, handleDocumentSubmission,
             </div>
             <div className="card-body p-4">
 
-              {/* Centralized Step Tracker */}
               <StepTracker currentStep={2} />
 
               <div className="alert alert-info">
@@ -29,8 +28,10 @@ const DocumentUploadForm = ({ files, handleFileChange, handleDocumentSubmission,
 
               <form onSubmit={(e) => e.preventDefault()}>
                 <div className="mb-3">
-                  <label className="form-label fw-bold">CV / Resume *</label>
+                  <label htmlFor="cvUpload" className="form-label fw-bold">CV / Resume *</label>
                   <input
+                    id="cvUpload"
+                    name="cv"
                     type="file"
                     onChange={(e) => handleFileChange(e, "cv")}
                     className="form-control"
@@ -40,8 +41,10 @@ const DocumentUploadForm = ({ files, handleFileChange, handleDocumentSubmission,
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Certificates *</label>
+                  <label htmlFor="certUpload" className="form-label fw-bold">Certificates *</label>
                   <input
+                    id="certUpload"
+                    name="certificates"
                     type="file"
                     onChange={(e) => handleFileChange(e, "certificates")}
                     className="form-control"
@@ -51,8 +54,10 @@ const DocumentUploadForm = ({ files, handleFileChange, handleDocumentSubmission,
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label fw-bold">ID Card / Passport *</label>
+                  <label htmlFor="idUpload" className="form-label fw-bold">ID Card / Passport *</label>
                   <input
+                    id="idUpload"
+                    name="idCard"
                     type="file"
                     onChange={(e) => handleFileChange(e, "idCard")}
                     className="form-control"
@@ -62,8 +67,10 @@ const DocumentUploadForm = ({ files, handleFileChange, handleDocumentSubmission,
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Police Report *</label>
+                  <label htmlFor="policeUpload" className="form-label fw-bold">Police Report *</label>
                   <input
+                    id="policeUpload"
+                    name="policeReport"
                     type="file"
                     onChange={(e) => handleFileChange(e, "policeReport")}
                     className="form-control"
@@ -73,8 +80,10 @@ const DocumentUploadForm = ({ files, handleFileChange, handleDocumentSubmission,
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Reference Documents</label>
+                  <label htmlFor="refUpload" className="form-label">Reference Documents</label>
                   <input
+                    id="refUpload"
+                    name="references"
                     type="file"
                     onChange={(e) => handleFileChange(e, "references")}
                     className="form-control"

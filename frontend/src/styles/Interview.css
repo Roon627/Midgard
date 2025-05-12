@@ -1,0 +1,90 @@
+/* Spinner */
+.loader {
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    animation: spin 0.6s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Bounce effect on successful submit */
+.bounce-in {
+    animation: bounceIn 0.8s ease-in-out;
+  }
+  
+  @keyframes bounceIn {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.6;
+    }
+
+    60% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Slide out animation */
+.slide-out-left {
+    animation: slideOutLeft 0.8s ease forwards;
+}
+
+@keyframes slideOutLeft {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+/* Ensure text/spinner inside .btn-gradient stays white */
+.btn-gradient,
+.btn-gradient * {
+    color: #fff !important;
+}
+
+
+/* Thank You fade-in animation */
+.thank-you-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease;
+}
+
+.thank-you-wrapper.fade-in {
+    opacity: 1;
+    transform: translateY(0);
+}

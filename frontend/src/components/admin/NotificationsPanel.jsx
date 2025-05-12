@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { API_URL } from "../../data/api";
 import "./NotificationsPanel.css";
 
 function NotificationsPanel() {
@@ -8,7 +9,12 @@ function NotificationsPanel() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await fetch("/api/notifications");
+        const res = await fetch(`${API_URL}/notifications`, {
+          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}`
+          }
+        });
         const data = await res.json();
         setNotifications(data);
       } catch (error) {

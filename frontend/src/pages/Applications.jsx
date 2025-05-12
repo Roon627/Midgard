@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "../data/api";
 import { exportSingleApplication } from "../utils/exportHelpers";
+import { fetchApplicantDocuments } from "../utils/fileHelpers";
+import DocumentViewer from "../components/admin/DocumentViewer";
 import "../styles/Applications.css";
 
 export default function Applications() {
   const [applications, setApplications] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [selectedApp, setSelectedApp] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [selectedDocApp, setSelectedDocApp] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -54,6 +58,12 @@ export default function Applications() {
     return `${correctCount}/10`;
   };
 
+  const handleLoadDocuments = async (app) => {
+    const docs = await fetchApplicantDocuments(app.id);
+    setDocuments(docs);
+    setSelectedDocApp(app);
+  };
+
   return (
     <div className="container py-4">
       {isLoading ? (
@@ -62,7 +72,6 @@ export default function Applications() {
         </div>
       ) : (
         <>
-          {/* Desktop Table View */}
           <div className="d-none d-md-block">
             <table className="table table-hover align-middle">
               <thead className="table-primary">
@@ -83,8 +92,9 @@ export default function Applications() {
                     <td>{new Date(app.createdAt).toLocaleString()}</td>
                     <td>
                       <button className="btn btn-outline-primary btn-sm me-2" onClick={() => setSelectedApp(app)}>View</button>
-                      <button className="btn btn-outline-success btn-sm me-2" onClick={() => exportApplication(app, "csv")}>Export CSV</button>
-                      <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplication(app, "pdf")}>Export PDF</button>
+                      <button className="btn btn-outline-secondary btn-sm me-2" onClick={() => handleLoadDocuments(app)}>Documents</button>
+                      <button className="btn btn-outline-success btn-sm me-2" onClick={() => exportApplication(app, "csv")}>CSV</button>
+                      <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplication(app, "pdf")}>PDF</button>
                     </td>
                   </tr>
                 ))}
@@ -92,7 +102,6 @@ export default function Applications() {
             </table>
           </div>
 
-          {/* Mobile Card View */}
           <div className="d-block d-md-none">
             {applications.map(app => (
               <div key={app.id} className="mobile-app-card shadow-sm mb-3 rounded p-3 bg-white">
@@ -108,6 +117,7 @@ export default function Applications() {
                 )}
                 <div className="d-flex flex-wrap gap-2 mt-2">
                   <button className="btn btn-outline-primary btn-sm" onClick={() => setSelectedApp(app)}>View</button>
+                  <button className="btn btn-outline-secondary btn-sm" onClick={() => handleLoadDocuments(app)}>Documents</button>
                   <button className="btn btn-outline-success btn-sm" onClick={() => exportApplication(app, "csv")}>CSV</button>
                   <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplication(app, "pdf")}>PDF</button>
                 </div>
@@ -117,7 +127,6 @@ export default function Applications() {
         </>
       )}
 
-      {/* View Modal */}
       {selectedApp && (
         <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-lg">
@@ -158,7 +167,7 @@ export default function Applications() {
                   )}
                 </ul>
 
-                <h6 className="text-primary">Interview Answers</h6>
+                <h6 className="text-primary mt-4">Interview Answers</h6>
                 <div className="list-group">
                   {Array.isArray(selectedApp.answers) && selectedApp.answers.map((answer, index) => (
                     <div key={index} className="list-group-item">
@@ -188,6 +197,31 @@ export default function Applications() {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-secondary" onClick={() => setSelectedApp(null)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedDocApp && (
+        <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header bg-dark text-white">
+                <h5 className="modal-title">Documents for {selectedDocApp.name}</h5>
+                <button type="button" className="btn-close" onClick={() => { setSelectedDocApp(null); setDocuments([]); }} />
+              </div>
+              <div className="modal-body">
+                <DocumentViewer
+                  files={documents}
+                  applicantName={selectedDocApp.name}
+                  nationalId={selectedDocApp.nationalId || selectedDocApp.passport}
+                />
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => { setSelectedDocApp(null); setDocuments([]); }}>
+                  Close
+                </button>
               </div>
             </div>
           </div>

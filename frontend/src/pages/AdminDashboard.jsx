@@ -5,6 +5,7 @@ import AdminSettings from "./AdminSettings";
 import Applications from "./Applications";
 import NotificationsPanel from "../components/admin/NotificationsPanel";
 import JobList from "./JobList";
+import { FaBriefcase, FaUserCheck } from "react-icons/fa";
 import "../styles/AdminDashboard.css";
 
 export default function AdminDashboard() {
@@ -139,12 +140,18 @@ export default function AdminDashboard() {
               <>
                 <div className="dashboard-cards">
                   <div className="dashboard-card">
-                    <h5 className="mb-2">Total Jobs</h5>
-                    <h2>{jobs.length}</h2>
+                    <div className="icon-circle"><FaBriefcase /></div>
+                    <div className="card-text">
+                      <span>Total Jobs</span>
+                      <h2>{jobs.length}</h2>
+                    </div>
                   </div>
                   <div className="dashboard-card">
-                    <h5 className="mb-2">Applications</h5>
-                    <h2>{applications.length}</h2>
+                    <div className="icon-circle"><FaUserCheck /></div>
+                    <div className="card-text">
+                      <span>Applications</span>
+                      <h2>{applications.length}</h2>
+                    </div>
                   </div>
                 </div>
                 <NotificationsPanel />

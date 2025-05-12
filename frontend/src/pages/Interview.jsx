@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { API_URL } from "../data/api";
 import { islamicKnowledge } from "../data/Questions/islamic.js";
 import personalityAssessment from "../data/Questions/personality.js";
@@ -12,10 +12,11 @@ import ThankYouScreen from "../components/interview/ThankYouScreen";
 import AssessmentNotice from "../components/interview/AssessmentNotice";
 import { validatePassportNumber } from "../utils/passportValidators";
 import shuffleArray from "../utils/shuffleArray";
-
+import { submitInterview } from "../utils/submitInterview.js";
 
 export default function Interview() {
   const { jobId } = useParams();
+  const navigate = useNavigate();
 
   const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(false);
   const [userInfo, setUserInfo] = useState({
@@ -28,7 +29,6 @@ export default function Interview() {
     nationalId: "",
     passport: "",
   });
-
   const [nationalitySearch, setNationalitySearch] = useState("");
   const [filteredNationalities, setFilteredNationalities] = useState([]);
   const [showNationalityDropdown, setShowNationalityDropdown] = useState(false);
@@ -46,6 +46,7 @@ export default function Interview() {
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [checkingApplication, setCheckingApplication] = useState(false);
   const [idValidationInProgress, setIdValidationInProgress] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const idValidationTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -54,9 +55,7 @@ export default function Interview() {
     } else {
       setFilteredNationalities(
         nationalities
-          .filter(n =>
-            n.name.toLowerCase().includes(nationalitySearch.toLowerCase())
-          )
+          .filter(n => n.name.toLowerCase().includes(nationalitySearch.toLowerCase()))
           .slice(0, 10)
       );
     }
@@ -88,10 +87,10 @@ export default function Interview() {
         initialAnswers[index] = { answer: "", points: null, traits: null };
       });
       setAnswers(initialAnswers);
-
       setCurrentStep(3);
     }
   }, [started]);
+
   useEffect(() => {
     if (currentStep < 3 || submitted || timeLeft <= 0) return;
     const timer = setInterval(() => {
@@ -118,7 +117,6 @@ export default function Interview() {
       ...prev,
       [index]: { answer: value, points, traits }
     }));
-
     setQuestionAnswerPairs(prev => {
       const newPairs = [...prev];
       newPairs[index] = {
@@ -138,6 +136,64 @@ export default function Interview() {
       return;
     }
     setFiles({ ...files, [key]: file });
+    setError("");
+  };
+
+  const handleIdentifierChange = (e, field) => {
+    const value = e.target.value;
+    setUserInfo({ ...userInfo, [field]: value });
+    setAlreadyApplied(false);
+
+    if (idValidationTimeoutRef.current) clearTimeout(idValidationTimeoutRef.current);
+    if (!value || value.length < 3) {
+      setIdValidationInProgress(false);
+      return;
+    }
+
+    if (field === 'passport' && userInfo.nationality) {
+      const { valid, message } = validatePassportNumber(userInfo.nationality, value);
+      if (!valid) {
+        setError(message);
+        return;
+      } else {
+        setError("");
+      }
+    }
+
+    setIdValidationInProgress(true);
+    idValidationTimeoutRef.current = setTimeout(() => {
+      const identifierType = field === 'nationalId' ? 'nationalId' : 'passport';
+      checkPreviousApplication(identifierType, value);
+      setIdValidationInProgress(false);
+    }, 500);
+  };
+
+  const handleStartInterview = async () => {
+    if (!navigator.onLine) return setError("You're offline.");
+    const isMaldivian = userInfo.nationality === "Maldives";
+    const idField = isMaldivian ? 'nationalId' : 'passport';
+    const requiredFields = ['firstName', 'lastName', 'nationality', 'email', 'currentlyWorking', idField];
+    const missing = requiredFields.filter(f => !userInfo[f]);
+    if (missing.length > 0) return setError(`Missing fields: ${missing.join(', ')}`);
+    if (isMaldivian && !userInfo.nationalId.startsWith('A')) return setError("ID must start with A.");
+    if (!isMaldivian) {
+      const { valid, message } = validatePassportNumber(userInfo.nationality, userInfo.passport);
+      if (!valid) return setError(message);
+    }
+    if (alreadyApplied) return setError("Already applied.");
+    const idType = isMaldivian ? 'nationalId' : 'passport';
+    const idVal = isMaldivian ? userInfo.nationalId : userInfo.passport;
+    const exists = await checkPreviousApplication(idType, idVal);
+    if (exists) return;
+    setCurrentStep(2);
+    setError("");
+  };
+
+  const handleDocumentSubmission = () => {
+    const required = ["cv", "certificates", "idCard", "policeReport"];
+    const missing = required.filter(r => !files[r]);
+    if (missing.length > 0) return setError(`Missing documents: ${missing.join(', ')}`);
+    setCurrentStep(2.5);
     setError("");
   };
 
@@ -168,121 +224,23 @@ export default function Interview() {
       setCheckingApplication(false);
     }
   };
-  const handleIdentifierChange = (e, field) => {
-    const value = e.target.value;
-    setUserInfo({ ...userInfo, [field]: value });
-    setAlreadyApplied(false);
-    if (idValidationTimeoutRef.current) clearTimeout(idValidationTimeoutRef.current);
-    if (!value || value.length < 3) {
-      setIdValidationInProgress(false);
-      return;
-    }
-    if (field === 'passport' && userInfo.nationality) {
-      const { valid, message } = validatePassportNumber(userInfo.nationality, value);
-      if (!valid) {
-        setError(message);
-        return;
-      } else setError("");
-    }
-    setIdValidationInProgress(true);
-    idValidationTimeoutRef.current = setTimeout(() => {
-      const identifierType = field === 'nationalId' ? 'nationalId' : 'passport';
-      checkPreviousApplication(identifierType, value);
-      setIdValidationInProgress(false);
-    }, 500);
-  };
 
-  const handleStartInterview = async () => {
-    if (!navigator.onLine) return setError("You're offline.");
-    const isMaldivian = userInfo.nationality === "Maldives";
-    const idField = isMaldivian ? 'nationalId' : 'passport';
-    const requiredFields = ['firstName', 'lastName', 'nationality', 'email', idField];
-    const missing = requiredFields.filter(f => !userInfo[f]);
-    if (missing.length > 0) return setError(`Missing fields: ${missing.join(', ')}`);
-    if (isMaldivian && !userInfo.nationalId.startsWith('A')) return setError("ID must start with A.");
-    if (!isMaldivian) {
-      const { valid, message } = validatePassportNumber(userInfo.nationality, userInfo.passport);
-      if (!valid) return setError(message);
-    }
-    if (alreadyApplied) return setError("Already applied.");
-    const idType = isMaldivian ? 'nationalId' : 'passport';
-    const idVal = isMaldivian ? userInfo.nationalId : userInfo.passport;
-    const exists = await checkPreviousApplication(idType, idVal);
-    if (exists) return;
-    setCurrentStep(2);
-    setError("");
-  };
-
-  const handleDocumentSubmission = () => {
-    const required = ["cv", "certificates", "idCard", "policeReport"];
-    const missing = required.filter(r => !files[r]);
-    if (missing.length > 0) return setError(`Missing documents: ${missing.join(', ')}`);
-    setCurrentStep(2.5);
-    setError("");
-  };
   const handleUploadAndSubmit = async () => {
-    try {
-      const traitScores = {};
-      let totalPoints = 0;
-
-      questionAnswerPairs.forEach((q) => {
-        if (q.type === "personality" && q.traits) {
-          for (const trait in q.traits) {
-            traitScores[trait] = (traitScores[trait] || 0) + q.traits[trait];
-            totalPoints += q.traits[trait];
-          }
-        }
-      });
-
-      let scoreCategory = "";
-      if (totalPoints >= 80) scoreCategory = "Excellent fit for leadership/strategic roles";
-      else if (totalPoints >= 60) scoreCategory = "Good fit for structured, team-based roles";
-      else if (totalPoints >= 40) scoreCategory = "Some alignment; may need guidance";
-      else scoreCategory = "May not align well with company culture";
-
-      const formData = new FormData();
-      formData.append("jobId", parseInt(jobId));
-      formData.append("name", `${userInfo.firstName} ${userInfo.lastName}`);
-      formData.append("email", userInfo.email);
-      formData.append("phoneNumber", userInfo.phone || "");
-      if (userInfo.nationality === "Maldives") {
-        formData.append("nationalId", userInfo.nationalId);
-      } else {
-        formData.append("passport", userInfo.passport);
-      }
-
-      const submissionData = questionAnswerPairs.map(pair => ({
-        question: pair.question,
-        answer: pair.answer,
-        correctAnswer: pair.correctAnswer || "",
-        score: null,
-        points: pair.points || null,
-        type: pair.type,
-        traits: pair.traits || null
-      }));
-
-      formData.append("questionAnswers", JSON.stringify(submissionData));
-      formData.append("personalityScore", totalPoints);
-      formData.append("scoreCategory", scoreCategory);
-      formData.append("traitScores", JSON.stringify(traitScores));
-
-      if (files.cv) formData.append("resume", files.cv);
-      if (files.certificates) formData.append("certificates", files.certificates);
-      if (files.idCard) formData.append("id_card", files.idCard);
-      if (files.policeReport) formData.append("police_report", files.policeReport);
-      if (files.references) formData.append("reference_documents", files.references);
-
-      const res = await fetch(`${API_URL}/submissions`, { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Failed to submit.");
-      setUploadDone(true);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Submit failed.");
-    }
+    setIsSubmitting(true);
+    await submitInterview({
+      jobId,
+      userInfo,
+      questionAnswerPairs,
+      files,
+      setUploadDone,
+      setError
+    });
+    setIsSubmitting(false);
   };
 
   if (!acceptedDisclaimer) return <DisclaimerNotice onAccept={() => setAcceptedDisclaimer(true)} />;
   if (uploadDone) return <ThankYouScreen />;
+
   if (currentStep === 1) {
     return (
       <div className="container py-5">
@@ -344,6 +302,7 @@ export default function Interview() {
       timeLeft={timeLeft}
       step={currentStep}
       setStep={setCurrentStep}
+      isSubmitting={isSubmitting}
       handleUploadAndSubmit={() => {
         setSubmitted(true);
         handleUploadAndSubmit();

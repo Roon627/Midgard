@@ -304,7 +304,7 @@ textarea.form-control {
   font-size: 0.95rem;
 }
 
-/*Button Hover Effect*/
+/* Button Gradient & Hover Animation */
 .btn-gradient {
   background: linear-gradient(135deg, #9c4dcc 0%, #6a1b9a 100%);
   color: white;
@@ -317,17 +317,34 @@ textarea.form-control {
   box-shadow: 0 4px 15px rgba(156, 77, 204, 0.3);
   text-align: center;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Hover / Active / Focus States */
 .btn-gradient:hover,
-.btn-gradient:focus,
-.btn-gradient:active {
-  color: white !important; 
+.btn-gradient:focus {
+  color: white !important;
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(156, 77, 204, 0.4);
   text-decoration: none;
   outline: none;
 }
+
+.btn-gradient:active {
+  transform: scale(0.97);
+  box-shadow: 0 3px 12px rgba(156, 77, 204, 0.3);
+}
+
+/* Disabled */
+.btn-gradient:disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  transform: none;
+  box-shadow: none;
+}
+
 
 .text-warning {
   color: #ffc107 !important;
@@ -425,5 +442,4 @@ input[type="radio"]:checked + label {
     transform: translateY(0);
   }
 }
-
 

@@ -11,23 +11,37 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-fallback-secret";
 // Admin login route
 router.post("/login", (req, res) => {
   const { username, password } = req.body;
+  console.log('Login attempt:', { username }); // Added logging
   if (!username || !password)
     return res.status(400).json({ message: "Username and password required." });
 
   db.get("SELECT * FROM admins WHERE username = ?", [username], (err, admin) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!admin) return res.status(401).json({ message: "Invalid credentials." });
+    if (err) {
+      console.error('Database error:', err.message);
+      return res.status(500).json({ error: err.message });
+    }
+    if (!admin) {
+      console.log('No admin found for username:', username);
+      return res.status(401).json({ message: "Invalid credentials." });
+    }
 
     bcrypt.compare(password, admin.password, (err, match) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (!match) return res.status(401).json({ message: "Invalid credentials." });
+      if (err) {
+        console.error('Bcrypt error:', err.message);
+        return res.status(500).json({ error: err.message });
+      }
+      if (!match) {
+        console.log('Password mismatch for username:', username);
+        return res.status(401).json({ message: "Invalid credentials." });
+      }
 
       const token = jwt.sign(
-        { username: admin.username, id: admin.id },
+        { username: admin.username, id: admin.id, role: "admin" }, // Added role: "admin"
         JWT_SECRET,
         { expiresIn: "1h" }
       );
 
+      console.log('Login successful for username:', username);
       return res.json({ message: "Login successful", token });
     });
   });

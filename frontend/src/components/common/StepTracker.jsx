@@ -2,10 +2,10 @@ import React from "react";
 
 const steps = [
   "Personal Info",
-  "Documents",
-  "Islamic",
-  "Personality 1",
-  "Personality 2"
+  "Document Upload",
+  "Interview 1",
+  "Interview 2",
+  "Interview 3",
 ];
 
 const StepTracker = ({ currentStep }) => {

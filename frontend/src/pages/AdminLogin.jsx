@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../data/api";
 import "../styles/AdminLogin.css";
 
 export default function AdminLogin() {
@@ -7,32 +8,45 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return; // Prevent duplicate submissions
+    if (!username || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
     setError("");
+    setIsLoading(true);
+    console.log('Login attempt:', { username, url: `${API_URL}/admin/login` });
 
     try {
-      const res = await fetch("/api/admin/login", {
+      const res = await fetch(`${API_URL}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => {
+        throw new Error("Invalid JSON response from server");
+      });
 
       if (res.ok && data.token) {
-        // ✅ Store the token as "adminToken"
         localStorage.setItem("adminToken", data.token);
-        // ✅ Navigate to dashboard
+        console.log('Login successful, token:', data.token);
         navigate("/admin/dashboard");
       } else {
-        setError(data.message || "Login failed.");
+        console.log('Login failed:', { status: res.status, data });
+        setError(data.message || "Invalid username or password.");
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setError("Server error. Please try again later.");
+      console.error("Login error:", err.message);
+      setError("Unable to connect to server. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,6 +69,7 @@ export default function AdminLogin() {
               placeholder="Enter your username"
               required
               autoComplete="username"
+              disabled={isLoading}
             />
           </div>
 
@@ -69,12 +84,14 @@ export default function AdminLogin() {
                 placeholder="Enter your password"
                 required
                 autoComplete="current-password"
+                disabled={isLoading}
               />
               <button
                 type="button"
                 className="show-password-btn"
                 onClick={() => setShowPassword((prev) => !prev)}
                 aria-label="Toggle password visibility"
+                disabled={isLoading}
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -83,8 +100,8 @@ export default function AdminLogin() {
 
           {error && <div className="admin-login-error">{error}</div>}
 
-          <button type="submit" className="admin-login-btn">
-            Log In
+          <button type="submit" className="admin-login-btn" disabled={isLoading}>
+            {isLoading ? "Logging In..." : "Log In"}
           </button>
         </form>
       </div>
