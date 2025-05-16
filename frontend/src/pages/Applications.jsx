@@ -3,7 +3,9 @@ import { API_URL } from "../data/api";
 import { exportSingleApplication } from "../utils/exportHelpers";
 import { fetchApplicantDocuments } from "../utils/fileHelpers";
 import DocumentViewer from "../components/admin/DocumentViewer";
+import Modal from "../components/common/Modal";
 import "../styles/Applications.css";
+import "../styles/modal.css";
 
 export default function Applications() {
   const [applications, setApplications] = useState([]);
@@ -19,21 +21,35 @@ export default function Applications() {
 
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem("adminToken");
+
       const [appsRes, jobsRes] = await Promise.all([
-        fetch(`${API_URL}/submissions`).then(res => res.json()),
-        fetch(`${API_URL}/jobs`).then(res => res.json())
+        fetch(`${API_URL}/submissions`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_URL}/jobs?all=true`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
-      setApplications(appsRes);
-      setJobs(jobsRes);
+
+      const appsData = await appsRes.json();
+      const jobsData = await jobsRes.json();
+
+      if (!Array.isArray(jobsData)) throw new Error("Invalid jobs data");
+
+      setApplications(appsData);
+      setJobs(jobsData);
       setIsLoading(false);
     } catch (error) {
       console.error("Error loading applications:", error);
+      setJobs([]);
+      setApplications([]);
       setIsLoading(false);
     }
   };
 
   const findJobTitle = (jobId) => {
-    const job = jobs.find(j => j.id === jobId);
+    const job = jobs.find((j) => j.id === jobId);
     return job ? job.title : "Unknown Job";
   };
 
@@ -41,7 +57,7 @@ export default function Applications() {
     exportSingleApplication({
       application,
       jobTitle: findJobTitle(application.jobId),
-      format
+      format,
     });
   };
 
@@ -65,16 +81,18 @@ export default function Applications() {
   };
 
   return (
-    <div className="container py-4">
+    <div className="applications-wrapper">
+    
       {isLoading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status" />
         </div>
       ) : (
         <>
+          {/* Desktop Table View */}
           <div className="d-none d-md-block">
             <table className="table table-hover align-middle">
-              <thead className="table-primary">
+              <thead className="table-light">
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
@@ -84,16 +102,16 @@ export default function Applications() {
                 </tr>
               </thead>
               <tbody>
-                {applications.map(app => (
+                {applications.map((app) => (
                   <tr key={app.id}>
                     <td>{app.name}</td>
                     <td>{app.email}</td>
                     <td>{findJobTitle(app.jobId)}</td>
                     <td>{new Date(app.createdAt).toLocaleString()}</td>
                     <td>
-                      <button className="btn btn-outline-primary btn-sm me-2" onClick={() => setSelectedApp(app)}>View</button>
-                      <button className="btn btn-outline-secondary btn-sm me-2" onClick={() => handleLoadDocuments(app)}>Documents</button>
-                      <button className="btn btn-outline-success btn-sm me-2" onClick={() => exportApplication(app, "csv")}>CSV</button>
+                      <button className="btn btn-outline-primary btn-sm me-1" onClick={() => setSelectedApp(app)}>View</button>
+                      <button className="btn btn-outline-secondary btn-sm me-1" onClick={() => handleLoadDocuments(app)}>Documents</button>
+                      <button className="btn btn-outline-success btn-sm me-1" onClick={() => exportApplication(app, "csv")}>CSV</button>
                       <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplication(app, "pdf")}>PDF</button>
                     </td>
                   </tr>
@@ -102,8 +120,9 @@ export default function Applications() {
             </table>
           </div>
 
+          {/* Mobile Card View */}
           <div className="d-block d-md-none">
-            {applications.map(app => (
+            {applications.map((app) => (
               <div key={app.id} className="mobile-app-card shadow-sm mb-3 rounded p-3 bg-white">
                 <h6 className="mb-2">{app.name}</h6>
                 <p className="mb-1"><strong>Email:</strong> {app.email}</p>
@@ -128,104 +147,78 @@ export default function Applications() {
       )}
 
       {selectedApp && (
-        <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header bg-primary text-white">
-                <h5 className="modal-title">Application Details</h5>
-                <button type="button" className="btn-close" onClick={() => setSelectedApp(null)} />
-              </div>
-              <div className="modal-body">
-                <h6 className="text-primary">Personal Info</h6>
-                <ul className="list-group mb-4">
-                  <li className="list-group-item"><strong>Name:</strong> {selectedApp.name}</li>
-                  <li className="list-group-item"><strong>Email:</strong> {selectedApp.email}</li>
-                  <li className="list-group-item"><strong>Phone:</strong> {selectedApp.phoneNumber}</li>
-                  <li className="list-group-item"><strong>National ID:</strong> {selectedApp.nationalId}</li>
-                  <li className="list-group-item"><strong>Job Title:</strong> {findJobTitle(selectedApp.jobId)}</li>
-                  <li className="list-group-item"><strong>Submitted At:</strong> {new Date(selectedApp.createdAt).toLocaleString()}</li>
-                  <li className="list-group-item">
-                    <strong>Islamic Knowledge:</strong> {calculateIslamicScore(selectedApp.answers)}
-                  </li>
-                  {selectedApp.personalityScore != null && (
-                    <>
-                      <li className="list-group-item"><strong>Personality Score:</strong> {selectedApp.personalityScore}</li>
-                      <li className="list-group-item"><strong>Score Category:</strong> {selectedApp.scoreCategory}</li>
-                    </>
-                  )}
-                  {selectedApp.traitScores && typeof selectedApp.traitScores === "object" && (
-                    <li className="list-group-item">
-                      <strong>Trait Breakdown:</strong>
-                      <ul className="mt-2 mb-0">
-                        {Object.entries(selectedApp.traitScores).map(([trait, value]) => (
-                          <li key={trait}>
-                            <span className="badge bg-secondary me-2">{trait}:</span> {value}
-                          </li>
-                        ))}
-                      </ul>
+        <Modal title="Application Details" onClose={() => setSelectedApp(null)}>
+          <h6 className="text-primary">Personal Info</h6>
+          <ul className="list-group mb-4">
+            <li className="list-group-item"><strong>Name:</strong> {selectedApp.name}</li>
+            <li className="list-group-item"><strong>Email:</strong> {selectedApp.email}</li>
+            <li className="list-group-item"><strong>Phone:</strong> {selectedApp.phoneNumber}</li>
+            <li className="list-group-item"><strong>National ID:</strong> {selectedApp.nationalId}</li>
+            <li className="list-group-item"><strong>Job Title:</strong> {findJobTitle(selectedApp.jobId)}</li>
+            <li className="list-group-item"><strong>Submitted At:</strong> {new Date(selectedApp.createdAt).toLocaleString()}</li>
+            <li className="list-group-item">
+              <strong>Islamic Knowledge:</strong> {calculateIslamicScore(selectedApp.answers)}
+            </li>
+            {selectedApp.personalityScore != null && (
+              <>
+                <li className="list-group-item"><strong>Personality Score:</strong> {selectedApp.personalityScore}</li>
+                <li className="list-group-item"><strong>Score Category:</strong> {selectedApp.scoreCategory}</li>
+              </>
+            )}
+            {selectedApp.traitScores && typeof selectedApp.traitScores === "object" && (
+              <li className="list-group-item">
+                <strong>Trait Breakdown:</strong>
+                <ul className="mt-2 mb-0">
+                  {Object.entries(selectedApp.traitScores).map(([trait, value]) => (
+                    <li key={trait}>
+                      <span className="badge bg-secondary me-2">{trait}:</span> {value}
                     </li>
-                  )}
-                </ul>
-
-                <h6 className="text-primary mt-4">Interview Answers</h6>
-                <div className="list-group">
-                  {Array.isArray(selectedApp.answers) && selectedApp.answers.map((answer, index) => (
-                    <div key={index} className="list-group-item">
-                      {typeof answer === "object" ? (
-                        <>
-                          <strong>Q{index + 1}:</strong> {answer.question || "Question not available"} <br />
-                          <span className="text-success"><strong>Candidate's Answer:</strong> {answer.answer || answer.selected || "—"}</span><br />
-                          {answer.correctAnswer && (
-                            <span className="text-muted">
-                              <strong>Correct Answer:</strong> {answer.correctAnswer}
-                            </span>
-                          )}
-                          {answer.points != null && (
-                            <span className="text-info ms-3">
-                              <strong>Points:</strong> {answer.points}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <strong>Q{index + 1}:</strong> <span className="text-success">Candidate's Answer:</span> {answer}
-                        </>
-                      )}
-                    </div>
                   ))}
-                </div>
+                </ul>
+              </li>
+            )}
+          </ul>
+
+          <h6 className="text-primary mt-4">Interview Answers</h6>
+          <div className="list-group">
+            {Array.isArray(selectedApp.answers) && selectedApp.answers.map((answer, index) => (
+              <div key={index} className="list-group-item">
+                {typeof answer === "object" ? (
+                  <>
+                    <strong>Q{index + 1}:</strong> {answer.question || "Question not available"} <br />
+                    <span className="text-success"><strong>Candidate's Answer:</strong> {answer.answer || answer.selected || "—"}</span><br />
+                    {answer.correctAnswer && (
+                      <span className="text-muted">
+                        <strong>Correct Answer:</strong> {answer.correctAnswer}
+                      </span>
+                    )}
+                    {answer.points != null && (
+                      <span className="text-info ms-3">
+                        <strong>Points:</strong> {answer.points}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <strong>Q{index + 1}:</strong> <span className="text-success">Candidate's Answer:</span> {answer}
+                  </>
+                )}
               </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setSelectedApp(null)}>Close</button>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
+        </Modal>
       )}
 
       {selectedDocApp && (
-        <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header bg-dark text-white">
-                <h5 className="modal-title">Documents for {selectedDocApp.name}</h5>
-                <button type="button" className="btn-close" onClick={() => { setSelectedDocApp(null); setDocuments([]); }} />
-              </div>
-              <div className="modal-body">
-                <DocumentViewer
-                  files={documents}
-                  applicantName={selectedDocApp.name}
-                  nationalId={selectedDocApp.nationalId || selectedDocApp.passport}
-                />
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => { setSelectedDocApp(null); setDocuments([]); }}>
-                  Close
-                </button>
-              </div>
-            </div>
+        <Modal title={`Documents for ${selectedDocApp.name}`} onClose={() => { setSelectedDocApp(null); setDocuments([]); }}>
+          <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+            <DocumentViewer
+              files={documents}
+              applicantName={selectedDocApp.name}
+              nationalId={selectedDocApp.nationalId || selectedDocApp.passport}
+            />
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

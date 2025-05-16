@@ -295,18 +295,19 @@ export default function Interview() {
 
   return (
     <InterviewQuestions
-      islamicQuestions={islamicQuestions}
-      personalityQuestions={personalityQs}
-      answers={answers}
-      handleChange={handleChange}
-      timeLeft={timeLeft}
-      step={currentStep}
-      setStep={setCurrentStep}
-      isSubmitting={isSubmitting}
-      handleUploadAndSubmit={() => {
-        setSubmitted(true);
-        handleUploadAndSubmit();
-      }}
+  islamicQuestions={islamicQuestions}
+  personalityQuestions={personalityQs}
+  answers={answers}
+  handleChange={handleChange}
+  timeLeft={timeLeft}
+  step={currentStep}
+  setStep={setCurrentStep}
+  isSubmitting={isSubmitting}
+  handleUploadAndSubmit={() => {
+    setSubmitted(true);
+    handleUploadAndSubmit();
+  }}
+  setUploadDone={setUploadDone} //call hankYouScreen
     />
   );
 }

@@ -1,64 +1,95 @@
-.admin-dashboard-wrapper {
+/* Admin Page Container */
+.admin-page-container {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  gap: 2rem;
-  padding: 2rem;
+  padding-top: 2rem;
 }
 
-/* Sidebar */
+/* Admin Panel Layout */
+.admin-dashboard-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  max-width: 1400px; /* Increased for wider layout */
+  width: 100%;
+  padding: 2rem 1rem;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+/* Sidebar Base Style */
 .admin-sidebar {
-  width: 200px;
   background: linear-gradient(180deg, #d1c4e9 0%, #b39ddb 100%);
-  padding: 1rem;
+  padding: 1rem 0.5rem;
   color: white;
-  border-radius: 8px;
+  border-radius: 10px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   align-self: flex-start;
 }
 
-.admin-sidebar-header {
-  text-align: center;
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-  font-weight: bold;
+/* PC sidebar width */
+@media (min-width: 769px) {
+  .admin-sidebar {
+    width: 180px;
+  }
 }
 
+/* Sidebar Header */
+.admin-sidebar-header {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Navigation Items */
 .admin-nav {
   list-style: none;
   padding: 0;
   margin: 0;
+  width: 100%;
 }
 
 .admin-nav-item {
-  padding: 10px;
-  margin-bottom: 8px;
+  width: 100%;
   text-align: center;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  padding: 8px;
+  margin-bottom: 8px;
   color: #fff;
+  background-color: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .admin-nav-item.active {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.25);
   font-weight: bold;
 }
 
-/* Main Content */
+/* Main Content Area */
 .admin-content {
-  flex: 1;
-  min-width: 300px;
-  max-width: 1000px;
+  flex-grow: 1;
   background: white;
-  padding: 2rem;
+  padding: 2.5rem 2rem; /* Increased padding */
   border-radius: 10px;
+  width: 100%;
+  max-width: 1100px; /* Increased max-width */
+  overflow-x: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -67,13 +98,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .admin-content-header h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   color: var(--primary-color-dark);
   border-bottom: 2px solid var(--primary-color);
   padding-bottom: 0.5rem;
@@ -81,10 +112,29 @@
 
 /* Table Container */
 .admin-table-wrapper {
+  overflow-x: auto;
   margin-top: 1rem;
+  padding-bottom: 1rem;
+  width: 100%;
 }
 
-/* Search Input */
+.admin-table td .btn {
+  margin: 0.2rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  min-width: 60px;
+  white-space: nowrap;
+}
+
+.admin-table td {
+  white-space: nowrap;
+}
+
+.admin-table tbody tr:not(:last-child) {
+  border-bottom: 1px solid #e2e2e2;
+}
+
+/* Search input */
 .search-input {
   width: 100%;
   max-width: 300px;
@@ -92,18 +142,6 @@
   margin-bottom: 1rem;
   border: 1px solid #ccc;
   border-radius: 6px;
-}
-
-/* Add Job Form */
-.card {
-  background: #fafafa;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.card h5 {
-  font-weight: 600;
-  margin-bottom: 1rem;
 }
 
 /* Dashboard Cards */
@@ -155,56 +193,60 @@
   margin: 0;
 }
 
-/* Recent Updates */
-.recent-updates {
-  background-color: #faf8fd;
-  border-left: 4px solid var(--primary-color-dark);
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+/* Tablet Layout */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .admin-table td .btn {
+    min-width: 72px;
+  }
+
+  .admin-table td > .btn + .btn {
+    margin-left: 0.3rem;
+  }
+
+  .admin-table td {
+    white-space: nowrap;
+  }
 }
 
-.recent-updates h5 {
-  font-size: 1.2rem;
-  color: var(--primary-color-dark);
-  margin-bottom: 1rem;
-  font-weight: 600;
-}
-
-.recent-updates .update-item {
-  background: #f9f1ff;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
-  border-radius: 6px;
-  border-left: 4px solid #66bb6a;
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-/* Responsive */
+/* Mobile Layout */
 @media (max-width: 768px) {
   .admin-dashboard-wrapper {
     flex-direction: column;
-    align-items: center;
     padding: 1rem;
   }
 
   .admin-sidebar {
     width: 100%;
-    text-align: center;
+    position: relative;
+    top: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .admin-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .admin-nav-item {
+    width: auto;
+    min-width: 80px;
+    margin: 4px;
+    font-size: 0.9rem;
   }
 
   .admin-content {
     width: 100%;
-    padding: 1.5rem;
+    padding: 1.5rem 1rem;
+    max-width: 100%; /* Full width on mobile */
   }
 
   .dashboard-cards {
     flex-direction: column;
     gap: 1rem;
-  }
-
-  .admin-nav-item {
-    font-size: 1rem;
   }
 }

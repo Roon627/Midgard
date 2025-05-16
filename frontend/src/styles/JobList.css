@@ -1,71 +1,214 @@
-/* JobList.css */
-
 .admin-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-  }
-  
-  .admin-table th,
-  .admin-table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .admin-table th {
-    background-color: #ede7f6;
-    font-weight: bold;
-  }
-  
-  .admin-table tbody tr:hover {
-    background-color: #f3e5f5;
-  }
-  
-  /* Job Card Layout */
-  .job-card {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-left: 5px solid #9c4dcc;
-    padding: 1rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-    transition: box-shadow 0.2s ease;
-  }
-  
-  .job-card:hover {
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  }
-  
-  .job-card h5 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: #6a1b9a;
-  }
-  
-  .job-card p {
-    margin: 0.2rem 0;
-    font-size: 0.95rem;
-  }
-  
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  margin-bottom: 2rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table thead {
+  background-color: #f3e8fd;
+}
+
+/* Column widths */
+.title-col {
+  width: 18%;
+}
+
+.description-col {
+  width: 38%;
+}
+
+.expires-col, .applicants-col {
+  width: 11%;
+}
+
+.actions-col {
+  width: 22%; /* Increased from 18% */
+}
+
+/* Cell styling */
+.title-cell {
+  font-weight: 500;
+}
+
+.description-cell {
+  position: relative;
+}
+
+.description-wrapper {
+  position: relative;
+}
+
+.description-text {
+  line-height: 1.5;
+  white-space: normal;
+  overflow: hidden;
+}
+
+.description-text.expanded {
+  white-space: normal;
+  overflow: visible;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  color: #6c5ce7;
+  padding: 0;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.expand-btn:hover {
+  text-decoration: underline;
+}
+
+.expires-cell, .applicants-cell {
+  vertical-align: middle;
+}
+
+.actions-cell {
+  vertical-align: middle;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.action-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.action-buttons .btn, 
+.edit-actions .btn {
+  font-size: 0.75rem;
+  padding: 5px 10px;
+  min-width: 80px; /* Increase minimum width */
+  white-space: nowrap;
+  flex: 1; /* Make buttons fill available space */
+}
+
+/* Mobile Card View */
+.job-card {
+  border: 1px solid #e0e0e0;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.job-card h5 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.job-card-content {
+  margin-bottom: 1rem;
+}
+
+.job-description-section {
+  margin-bottom: 1rem;
+}
+
+.job-description {
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 6px;
+  position: relative;
+}
+
+.job-detail {
+  display: flex;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.label {
+  font-weight: 500;
+  margin-right: 10px;
+  margin-bottom: 0;
+  min-width: 80px;
+}
+
+.value {
+  margin-bottom: 0;
+}
+
+.job-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.actions-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.expand-btn.mobile {
+  font-size: 0.75rem;
+  margin-top: 8px;
+  display: block;
+}
+
+/* Form control styles for editing */
+.form-control {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Mobile View Button Improvements */
+@media (max-width: 767.98px) {
   .job-card-actions {
-    margin-top: 0.75rem;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
   }
   
-  /* Responsive toggle (optional if using Bootstrap's d-md-none) */
-  @media (min-width: 769px) {
-    .job-card {
-      display: none;
-    }
+  .actions-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap; /* Prevent wrapping */
+    width: 100%;
   }
   
-  @media (max-width: 768px) {
-    .admin-table {
-      display: none;
-    }
+  .actions-row .btn {
+    flex: 1;
+    font-size: 0.75rem; /* Slightly smaller font */
+    padding: 8px 4px; /* Reduce horizontal padding */
+    text-align: center;
+    min-width: 0; /* Allow buttons to be as small as needed */
+    max-width: none; /* Remove any max-width constraints */
   }
-  
+}

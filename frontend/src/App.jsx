@@ -4,6 +4,7 @@ import "./styles/App.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
 
+
 // Pages & Components
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -17,6 +18,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminSubmissions from "./pages/AdminSubmissions";
 import AdminSettings from "./pages/AdminSettings";
 import ProtectedAdminRoute from "./components/auth/ProtectedAdminRoute";
+import JobDetails from "./pages/JobDetails";
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/interview/:jobId" element={<Interview />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/jobs/:jobId" element={<JobDetails />} />
 
             <Route
               path="/admin/dashboard"

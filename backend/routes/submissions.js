@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const db = require("../db");
 const nodemailer = require("nodemailer");
+const emailTemplate = fs.readFileSync(path.join(__dirname, '../templates/confirmationEmail.html'), 'utf8');
 
 const router = express.Router();
 
@@ -14,7 +15,6 @@ const storage = multer.diskStorage({
     const identifier = nationalId || passport || "unknown";
     const safeName = name ? name.replace(/[^a-z0-9]/gi, "_").toLowerCase() : "anonymous";
     const dir = path.join("uploads", `${safeName}_${identifier}`);
-
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -36,16 +36,8 @@ router.post("/", upload.fields([
 ]), async (req, res) => {
   try {
     const {
-      jobId,
-      name,
-      nationalId,
-      passport,
-      questionAnswers,
-      email,
-      phoneNumber,
-      personalityScore,
-      scoreCategory,
-      traitScores
+      jobId, name, nationalId, passport, questionAnswers, email,
+      phoneNumber, personalityScore, scoreCategory, traitScores
     } = req.body;
     const files = req.files;
 
@@ -153,28 +145,42 @@ router.post("/", upload.fields([
               });
 
               const lastName = name.split(" ").slice(-1)[0];
-              const emailBody = settings.email_body
+              const emailBody = emailTemplate
                 .replace("[LAST_NAME]", lastName)
                 .replace("[JOB_TITLE]", jobRow.title);
               const emailSubject = settings.email_subject.replace("[JOB_TITLE]", jobRow.title);
 
-              await transporter.sendMail({
-                from: `"${settings.sender_name}" <${settings.sender_email}>`,
-                to: email,
-                subject: emailSubject,
-                text: emailBody,
-              });
+              console.log("📨 Sending confirmation to:", email);
 
-              await transporter.sendMail({
-                from: `"${settings.sender_name}" <${settings.sender_email}>`,
-                to: "runharun627@gmail.com",
-                subject: "New Job Application Received",
-                text: `A new application has been submitted by ${name} for ${jobRow.title}.`,
-              });
+              // Send to applicant
+              try {
+                const userMail = await transporter.sendMail({
+                  from: `"${settings.sender_name}" <${settings.sender_email}>`,
+                  to: email,
+                  subject: emailSubject,
+                  html: emailBody,
+                });
+                console.log("✅ User mail result:", userMail);
+              } catch (mailErr) {
+                console.error("❌ Failed to send user email:", mailErr);
+              }
 
-              console.log("Emails sent to user and admin.");
+              // Send to admin
+              try {
+                const adminMail = await transporter.sendMail({
+                  from: `"${settings.sender_name}" <${settings.sender_email}>`,
+                  to: "runharun627@gmail.com",
+                  subject: "New Job Application Received",
+                  text: `A new application has been submitted by ${name} for ${jobRow.title}.`,
+                });
+                console.log("✅ Admin mail result:", adminMail);
+              } catch (adminErr) {
+                console.error("❌ Failed to send admin email:", adminErr);
+              }
+
+              console.log("📤 Email send operations complete.");
             } catch (error) {
-              console.error("Error sending email:", error);
+              console.error("💥 Email send setup failed:", error);
             }
           });
         });
@@ -226,7 +232,6 @@ router.post("/check-application", (req, res) => {
   );
 });
 
-// Return document file list for a submission
 router.get("/:id/documents", (req, res) => {
   const submissionId = parseInt(req.params.id);
   if (isNaN(submissionId)) {
@@ -251,14 +256,7 @@ router.get("/:id/documents", (req, res) => {
     try {
       const files = fs.readdirSync(folderPath);
       const fileUrls = files
-        .filter(filename => {
-          const filePath = path.join(folderPath, filename);
-          const exists = fs.existsSync(filePath);
-          if (!exists) {
-            console.warn(`File listed but not found on server: ${filePath}`);
-          }
-          return exists; // Only include files that exist
-        })
+        .filter(filename => fs.existsSync(path.join(folderPath, filename)))
         .map(filename => {
           const stats = fs.statSync(path.join(folderPath, filename));
           return {

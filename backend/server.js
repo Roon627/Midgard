@@ -22,7 +22,8 @@ const notificationsRouter = require("./routes/notifications");
 // ====== CORS Setup ======
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  process.env.FRONTEND_LOCAL || "http://localhost:5173"
+  process.env.FRONTEND_LOCAL || "http://localhost:5173",
+  "https://observed-relief-metals-diagram.trycloudflare.com" // ✅ Explicitly allow this frontend
 ];
 
 app.use(cors({
@@ -59,9 +60,7 @@ function isAdminAuthenticated(req, res, next) {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded && decoded.role === "admin") {
-        return next();
-      }
+      if (decoded?.role === "admin") return next();
     } catch (err) {
       console.error("JWT auth error:", err.message);
     }
@@ -69,30 +68,21 @@ function isAdminAuthenticated(req, res, next) {
   return res.status(401).send("Unauthorized upload access.");
 }
 
-// ====== Serve /uploads with auth (important: before React routes) ======
+// ====== Serve /uploads with JWT auth ======
 app.get('/uploads/:folder/:filename', isAdminAuthenticated, (req, res) => {
   const { folder, filename } = req.params;
   const filePath = path.join(uploadsDir, folder, filename);
 
   if (!fs.existsSync(filePath)) {
-    console.error(`File not found: ${filePath}`);
     return res.status(404).send("File not found.");
   }
 
-  const mimeType = mime.lookup(filePath) || 'application/octet-stream';
+  const mimeType = mime.lookup(filePath) || "application/octet-stream";
 
-  // Check for X-No-Download header to avoid forcing a browser download
   if (req.headers["x-no-download"] === "true") {
-    console.log(`Serving file for ZIP: ${filePath}`);
     res.setHeader("Content-Type", mimeType);
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error("File send error:", err.message);
-        res.status(500).send("Error serving file.");
-      }
-    });
+    res.sendFile(filePath);
   } else {
-    console.log(`Serving file for direct download: ${filePath}`);
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Type", mimeType);
     fs.createReadStream(filePath).pipe(res);
@@ -113,9 +103,7 @@ const storage = multer.diskStorage({
     const identifier = nationalId || passport || "unknown";
     const safeName = name ? name.replace(/[^a-z0-9]/gi, "_").toLowerCase() : "anonymous";
     const dir = path.join(uploadsDir, `${safeName}_${identifier}`);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
@@ -130,7 +118,7 @@ app.post("/api/upload", upload.any(), (req, res) => {
   res.json({ uploaded: fileData });
 });
 
-// ====== Contact Form ======
+// ====== Contact Form Email Endpoint ======
 app.post("/api/contact", async (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message) {
@@ -167,7 +155,7 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
-// ====== Test Route to Confirm Direct File Access ======
+// ====== Test Route for File Serving ======
 app.get("/test-download", (req, res) => {
   const testFile = path.join(uploadsDir, "ahmed__harun_A277661", "1746832762996-Mandhu.pdf");
   if (!fs.existsSync(testFile)) {
@@ -176,7 +164,7 @@ app.get("/test-download", (req, res) => {
   res.download(testFile);
 });
 
-// ====== React Frontend Fallback (must come last) ======
+// ====== React Frontend Fallback ======
 const frontendPath = path.join(__dirname, "frontend", "dist");
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));

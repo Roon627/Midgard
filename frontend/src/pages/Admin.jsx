@@ -1,18 +1,22 @@
-import React from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-const Admin = () => {
+export default function Admin() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Automatically redirect to /admin/dashboard
+    navigate("/admin/dashboard");
+  }, [navigate]);
+
   return (
-    <div className="container my-5">
-      <h1 className="text-center mb-4">Admin Dashboard</h1>
-      <p className="text-center lead">
-        Welcome to the admin dashboard. You can manage your jobs, view submissions, and more!
-      </p>
-      <div className="d-flex justify-content-center mt-5">
-        <button className="btn btn-primary mx-2">Manage Jobs</button>
-        <button className="btn btn-secondary mx-2">View Submissions</button>
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+      <div className="text-center">
+        <div className="spinner-border text-primary mb-3" role="status">
+          <span className="visually-hidden">Redirecting...</span>
+        </div>
+        <div className="text-muted">Redirecting to admin dashboard...</div>
       </div>
     </div>
   );
-};
-
-export default Admin;
+}

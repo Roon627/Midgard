@@ -1,0 +1,22 @@
+.add-job-form {
+    padding: 1rem 1rem;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  
+  .add-job-form .form-control,
+  .add-job-form .form-select {
+    border-radius: 8px;
+  }
+  
+  .btn-gradient {
+    background: linear-gradient(135deg, #9c4dcc, #6a1b9a);
+    color: white;
+    border: none;
+    border-radius: 6px;
+  }
+  
+  .btn-gradient:hover {
+    background: #6a1b9a;
+  }
+  

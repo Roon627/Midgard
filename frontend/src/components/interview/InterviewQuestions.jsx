@@ -1,3 +1,4 @@
+// All imports remain the same
 import React, { useEffect, useState, useRef } from "react";
 import StepTracker from "../common/StepTracker";
 import "../../styles/Interview.css";
@@ -12,56 +13,48 @@ const InterviewQuestions = ({
   step,
   setStep,
   isSubmitting,
-  setUploadDone // from Interview.jsx
+  setUploadDone
 }) => {
   const [isPageComplete, setIsPageComplete] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [visibilityWarning, setVisibilityWarning] = useState(false);
   const [showDisabledReason, setShowDisabledReason] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("idle");
-  const [slideOut, setSlideOut] = useState(false);
 
   const containerRef = useRef();
-  const topRef = useRef();
+  const topRef = useRef(); // Top of step container
   const tabExitCount = useRef(0);
   const tabHiddenSince = useRef(null);
 
+  // ✅ Auto-scroll to top when step changes
   useEffect(() => {
     setTimeout(() => {
       if (topRef.current) {
         topRef.current.scrollIntoView({ behavior: "smooth" });
       }
-    }, 100);
+    }, 50); // small delay ensures DOM renders first
   }, [step]);
+
 
   useEffect(() => {
     const keyCheck = (e) => {
-      if (
+      const isDevToolsKey =
         e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J"))
-      ) {
-        alert("Developer tools are not allowed.");
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J"));
+      if (isDevToolsKey) {
+        alert("To ensure a fair assessment for all candidates, developer tools are not allowed.\nUsing them may return you to the Careers page and restart your session.");
         e.preventDefault();
       }
     };
+
     const preventContextMenu = (e) => e.preventDefault();
 
     document.addEventListener("keydown", keyCheck);
     document.addEventListener("contextmenu", preventContextMenu);
+
     return () => {
       document.removeEventListener("keydown", keyCheck);
       document.removeEventListener("contextmenu", preventContextMenu);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -71,7 +64,7 @@ const InterviewQuestions = ({
         tabHiddenSince.current = new Date();
         tabExitCount.current += 1;
         if (tabExitCount.current > 3) {
-          alert("Too many tab switches. Assessment ended.");
+          alert("You've switched tabs too many times. Assessment ended.");
           window.location.href = "/careers";
         }
       } else if (document.visibilityState === "visible") {
@@ -92,7 +85,7 @@ const InterviewQuestions = ({
 
   useEffect(() => {
     const offset = step === 3 ? 0 : step === 4 ? 10 : 20;
-    const count = step === 3 ? 10 : 10;
+    const count = 10;
     const complete = Array.from({ length: count }).every(
       (_, i) => answers[offset + i]?.answer
     );
@@ -116,11 +109,13 @@ const InterviewQuestions = ({
       setUploadStatus("uploading");
       await handleUploadAndSubmit();
       setUploadStatus("done");
-      setTimeout(() => setSlideOut(true), 1000);
-      setTimeout(() => setUploadDone(true), 1800); // tells Interview.jsx to show ThankYouScreen
+
+      setTimeout(() => {
+        setUploadDone(true);
+      }, 1000);
     } catch (error) {
       setUploadStatus("idle");
-      console.error("Upload failed:", error);
+      console.error("Submission error:", error);
       alert("Something went wrong. Please try again.");
     }
   };
@@ -130,7 +125,7 @@ const InterviewQuestions = ({
       setShowDisabledReason(true);
       setTimeout(() => setShowDisabledReason(false), 3000);
     } else {
-      setStep((prev) => prev + 1);
+      setStep((prevStep) => prevStep + 1);
     }
   };
 
@@ -177,7 +172,9 @@ const InterviewQuestions = ({
           return (
             <div className="question-card card mb-3 shadow-sm" key={questionIndex}>
               <div className="card-body">
-                <h5 className="card-title mb-3">Question {questionIndex + 1}: {q.question}</h5>
+                <h5 className="card-title mb-3">
+                  Question {questionIndex + 1}: {q.question}
+                </h5>
                 <div className="options">
                   {q.options?.map((opt, idx) => (
                     <div key={idx} className="form-check mb-2 p-2 rounded question-option">
@@ -187,10 +184,15 @@ const InterviewQuestions = ({
                         name={`personality-question-${questionIndex}`}
                         value={opt.text}
                         checked={answers[questionIndex]?.answer === opt.text}
-                        onChange={() => handleChange(questionIndex, opt.text, opt.points, opt.traits || {})}
+                        onChange={() =>
+                          handleChange(questionIndex, opt.text, opt.points, opt.traits || {})
+                        }
                         className="form-check-input"
                       />
-                      <label className="form-check-label" htmlFor={`personality-q${questionIndex}-opt${idx}`}>
+                      <label
+                        className="form-check-label"
+                        htmlFor={`personality-q${questionIndex}-opt${idx}`}
+                      >
                         {opt.text}
                       </label>
                     </div>
@@ -207,7 +209,7 @@ const InterviewQuestions = ({
   return (
     <div className="container py-4" ref={containerRef}>
       <div ref={topRef}></div>
-      <div className={`card shadow-sm border-0 ${slideOut ? "slide-out-left" : ""}`}>
+      <div className="card shadow-sm border-0">
         <div className="card-header bg-primary text-white p-3 d-flex justify-content-between">
           <h2 className="m-0">Interview Questions</h2>
           <div className="timer bg-white text-primary px-3 py-1 rounded-pill">
@@ -229,13 +231,13 @@ const InterviewQuestions = ({
 
           {(visibilityWarning || tabExitCount.current > 2) && (
             <div className="alert alert-info">
-              <strong>Heads up:</strong> Avoid switching tabs or going inactive.
+              <strong>Notice:</strong> Please avoid switching tabs or staying inactive. Your session may be reset.
             </div>
           )}
 
           {showDisabledReason && (
             <div className="alert alert-warning">
-              Complete all questions and ensure you're online.
+              Please complete all questions and ensure you're online.
             </div>
           )}
 
@@ -263,9 +265,8 @@ const InterviewQuestions = ({
               <button
                 type="button"
                 onClick={handleSubmit}
-                className={`btn btn-gradient py-2 fw-semibold shadow-sm d-flex align-items-center justify-content-center ${
-                  uploadStatus === "done" ? "bounce-in" : ""
-                }`}
+                className={`btn btn-gradient py-2 fw-semibold shadow-sm d-flex align-items-center justify-content-center ${uploadStatus === "done" ? "bounce-in" : ""
+                  }`}
                 disabled={uploadStatus !== "idle"}
               >
                 {uploadStatus === "uploading" ? (
