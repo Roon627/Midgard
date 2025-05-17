@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../styles/JobList.css";
 import { API_URL } from "../data/api";
+import { exportToExcelXLS } from "../utils/exportXLS";
 
 export default function JobList({
   jobs,
@@ -66,6 +67,12 @@ export default function JobList({
     } else {
       return description.length > 80 ? `${description.slice(0, 80)}...` : description;
     }
+  };
+
+  const handleExportXLS = (jobId) => {
+    const jobApplications = applications.filter(app => app.jobId === jobId);
+    const job = jobs.find(j => j.id === jobId);
+    exportToExcelXLS(jobApplications, job);
   };
 
   return (
@@ -155,7 +162,7 @@ export default function JobList({
                         <button className="btn btn-danger btn-sm" onClick={() => handleDelete(job.id)}>Delete</button>
                       </div>
                       <div className="action-row">
-                        <button className="btn btn-outline-success btn-sm" onClick={() => exportApplicants({ jobId: job.id, applications, jobs, format: "csv" })}>Export CSV</button>
+                        <button className="btn btn-outline-success btn-sm" onClick={() => handleExportXLS(job.id)}>Export XLS</button>
                         <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplicants({ jobId: job.id, applications, jobs, format: "pdf" })}>Export PDF</button>
                       </div>
                     </div>
@@ -211,7 +218,7 @@ export default function JobList({
                 <button className="btn btn-danger btn-sm" onClick={() => handleDelete(job.id)}>Delete</button>
               </div>
               <div className="actions-row">
-                <button className="btn btn-outline-success btn-sm" onClick={() => exportApplicants({ jobId: job.id, applications, jobs, format: "csv" })}>CSV</button>
+                <button className="btn btn-outline-success btn-sm" onClick={() => handleExportXLS(job.id)}>XLS</button>
                 <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplicants({ jobId: job.id, applications, jobs, format: "pdf" })}>PDF</button>
               </div>
             </div>
