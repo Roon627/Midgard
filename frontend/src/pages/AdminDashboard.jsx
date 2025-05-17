@@ -4,26 +4,29 @@ import { exportApplicants } from "../utils/exportHelpers";
 import AdminSettings from "./AdminSettings";
 import Applications from "./Applications";
 import NotificationsPanel from "../components/admin/NotificationsPanel";
-
 import JobList from "./JobList";
 import AddJob from "../components/admin/AddJob";
+import EditJob from "../components/admin/EditJob";
+import Modal from "../components/common/Modal";
 import { FaBriefcase, FaUserCheck } from "react-icons/fa";
 import "../styles/AdminDashboard.css";
 import "../styles/modal.css";
 import ExpJobs from "./ExpJobs";
 
 export default function AdminDashboard() {
+  // State
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [activeMenu, setActiveMenu] = useState("dashboard");
   const [editingJobId, setEditingJobId] = useState(null);
-  const [editedJob, setEditedJob] = useState({ title: "", description: "", expiresAt: "" });
+  const [editedJob, setEditedJob] = useState({});
+  const [showAddForm, setShowAddForm] = useState(false);
   const [showExpiredJobs, setShowExpiredJobs] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [authError, setAuthError] = useState(null);
 
+  // Initial fetch
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (!token) {
@@ -31,16 +34,33 @@ export default function AdminDashboard() {
       setIsLoading(false);
       return;
     }
-
     if (["jobs", "dashboard", "applications"].includes(activeMenu)) {
       fetchData();
     }
   }, [activeMenu]);
 
+  // Modal Escape + scroll lock
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setShowAddForm(false);
+    };
+    if (showAddForm) {
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", handleKeyDown);
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showAddForm]);
+
+  // Fetch jobs + applications
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      if (!token) throw new Error("Authentication token is missing. Please login again.");
+      if (!token) throw new Error("Authentication token is missing.");
 
       const [jobsRes, appsRes] = await Promise.all([
         fetch(`${API_URL}/jobs?all=true`, {
@@ -62,12 +82,6 @@ export default function AdminDashboard() {
         throw new Error("Your session has expired. Please login again.");
       }
 
-      if (!jobsRes.ok || !appsRes.ok) {
-        const jobsErr = await jobsRes.json().catch(() => ({}));
-        const appsErr = await appsRes.json().catch(() => ({}));
-        throw new Error("Fetch failed: " + (jobsErr?.error || appsErr?.error || "Unknown error"));
-      }
-
       const jobsData = await jobsRes.json();
       const appsData = await appsRes.json();
 
@@ -75,10 +89,10 @@ export default function AdminDashboard() {
 
       setJobs(jobsData);
       setApplications(appsData);
-      setAuthError(null);
       setIsLoading(false);
+      setAuthError(null);
     } catch (error) {
-      console.error("Error loading jobs or applications:", error);
+      console.error("Error loading data:", error);
       setJobs([]);
       setApplications([]);
       setAuthError(error.message);
@@ -91,36 +105,27 @@ export default function AdminDashboard() {
     window.location.href = "/admin/login";
   };
 
-  const toggleExpiredView = () => setShowExpiredJobs((prev) => !prev);
+  const toggleExpiredView = () => setShowExpiredJobs(prev => !prev);
 
-  const filteredJobs = jobs
-    .filter((job) =>
-      showExpiredJobs
-        ? new Date(job.expiresAt) < new Date()
-        : new Date(job.expiresAt) >= new Date()
-    )
-    .filter((job) =>
-      job.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const filteredJobs = jobs.filter((job) =>
+    (showExpiredJobs ? new Date(job.expiresAt) < new Date() : new Date(job.expiresAt) >= new Date()) &&
+    job.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const startEditing = (job) => {
     setEditingJobId(job.id);
-    setEditedJob({
-      title: job.title,
-      description: job.description,
-      expiresAt: job.expiresAt,
-    });
+    setEditedJob({ ...job });
   };
 
   const cancelEditing = () => {
     setEditingJobId(null);
-    setEditedJob({ title: "", description: "", expiresAt: "" });
+    setEditedJob({});
   };
 
-  const saveEditedJob = async (jobId) => {
+  const saveEditedJob = async (jobId, updatedData = editedJob) => {
     try {
       const token = localStorage.getItem("adminToken");
-      if (!token) throw new Error("Authentication token is missing. Please login again.");
+      if (!token) throw new Error("Authentication token is missing.");
 
       const response = await fetch(`${API_URL}/jobs/${jobId}`, {
         method: "PUT",
@@ -128,10 +133,10 @@ export default function AdminDashboard() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(editedJob),
+        body: JSON.stringify(updatedData),
       });
 
-      if (response.status === 401 || response.status === 403) {
+      if ([401, 403].includes(response.status)) {
         localStorage.removeItem("adminToken");
         throw new Error("Your session has expired. Please login again.");
       }
@@ -180,13 +185,13 @@ export default function AdminDashboard() {
                   {showExpiredJobs ? "Show Active Jobs" : "Show Expired Jobs"}
                 </button>
                 <button onClick={() => setShowAddForm(true)} className="btn btn-primary">
-                  ➕ Add New Job
+                  Add New Job
                 </button>
               </div>
             )}
           </div>
 
-          {/* Auth or Content */}
+          {/* Error / Loading / Content */}
           {authError ? (
             <div className="alert alert-danger">
               <strong>Authentication Error:</strong> {authError}
@@ -198,10 +203,7 @@ export default function AdminDashboard() {
             </div>
           ) : isLoading && activeMenu !== "settings" ? (
             <div className="spinner-container">
-              <div
-                className="spinner-border text-primary"
-                style={{ width: "3rem", height: "3rem" }}
-              ></div>
+              <div className="spinner-border text-primary" style={{ width: "3rem", height: "3rem" }}></div>
             </div>
           ) : (
             <>
@@ -223,10 +225,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Expiring Jobs */}
                   <ExpJobs jobs={jobs} />
-
                   <NotificationsPanel />
                 </>
               )}
@@ -271,23 +270,29 @@ export default function AdminDashboard() {
 
           {/* Add Job Modal */}
           {showAddForm && !authError && (
-            <div className="modal-overlay">
-              <div className="modal-content">
-                <button
-                  className="btn btn-outline-secondary mb-3"
-                  onClick={() => setShowAddForm(false)}
-                >
-                  ← Back
-                </button>
-                <AddJob
-                  onJobCreated={() => {
-                    fetchData();
-                    setShowAddForm(false);
-                  }}
-                  onCancel={() => setShowAddForm(false)}
-                />
-              </div>
-            </div>
+            <Modal title="Add New Job" onClose={() => setShowAddForm(false)}>
+              <AddJob
+                onJobCreated={() => {
+                  fetchData();
+                  setShowAddForm(false);
+                }}
+                onCancel={() => setShowAddForm(false)}
+              />
+            </Modal>
+          )}
+
+          {/* Edit Job Modal */}
+          {editingJobId && (
+            <Modal title="Edit Job" onClose={cancelEditing}>
+              <EditJob
+                job={editedJob} // ✅ use state, not find()
+                onClose={cancelEditing}
+                onSave={(updatedData) => {
+                  setEditedJob(updatedData);
+                  saveEditedJob(editingJobId, updatedData);
+                }}
+              />
+            </Modal>
           )}
         </div>
       </div>

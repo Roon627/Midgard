@@ -49,8 +49,8 @@ export default function Applications() {
   };
 
   const findJobTitle = (jobId) => {
-    const job = jobs.find((j) => j.id === jobId);
-    return job ? job.title : "Unknown Job";
+    const job = jobs.find((j) => j.id == jobId);
+    return job ? job.title : `Deleted Job (ID: ${jobId})`;
   };
 
   const exportApplication = (application, format) => {
@@ -82,14 +82,12 @@ export default function Applications() {
 
   return (
     <div className="applications-wrapper">
-    
       {isLoading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status" />
         </div>
       ) : (
         <>
-          {/* Desktop Table View */}
           <div className="d-none d-md-block">
             <table className="table table-hover align-middle">
               <thead className="table-light">
@@ -106,12 +104,13 @@ export default function Applications() {
                   <tr key={app.id}>
                     <td>{app.name}</td>
                     <td>{app.email}</td>
-                    <td>{findJobTitle(app.jobId)}</td>
+                    <td className={!jobs.find(j => j.id == app.jobId) ? "text-muted fst-italic" : ""}>
+                      {findJobTitle(app.jobId)}
+                    </td>
                     <td>{new Date(app.createdAt).toLocaleString()}</td>
                     <td>
                       <button className="btn btn-outline-primary btn-sm me-1" onClick={() => setSelectedApp(app)}>View</button>
                       <button className="btn btn-outline-secondary btn-sm me-1" onClick={() => handleLoadDocuments(app)}>Documents</button>
-                      <button className="btn btn-outline-success btn-sm me-1" onClick={() => exportApplication(app, "csv")}>CSV</button>
                       <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplication(app, "pdf")}>PDF</button>
                     </td>
                   </tr>
@@ -120,7 +119,6 @@ export default function Applications() {
             </table>
           </div>
 
-          {/* Mobile Card View */}
           <div className="d-block d-md-none">
             {applications.map((app) => (
               <div key={app.id} className="mobile-app-card shadow-sm mb-3 rounded p-3 bg-white">
@@ -153,7 +151,10 @@ export default function Applications() {
             <li className="list-group-item"><strong>Name:</strong> {selectedApp.name}</li>
             <li className="list-group-item"><strong>Email:</strong> {selectedApp.email}</li>
             <li className="list-group-item"><strong>Phone:</strong> {selectedApp.phoneNumber}</li>
-            <li className="list-group-item"><strong>National ID:</strong> {selectedApp.nationalId}</li>
+            <li className="list-group-item">
+              <strong>{selectedApp.nationalId ? "National ID" : "Passport"}:</strong>{" "}
+              {selectedApp.nationalId || selectedApp.passport || "—"}
+            </li>
             <li className="list-group-item"><strong>Job Title:</strong> {findJobTitle(selectedApp.jobId)}</li>
             <li className="list-group-item"><strong>Submitted At:</strong> {new Date(selectedApp.createdAt).toLocaleString()}</li>
             <li className="list-group-item">
