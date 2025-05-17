@@ -135,7 +135,6 @@ export default function Applications() {
                 <div className="d-flex flex-wrap gap-2 mt-2">
                   <button className="btn btn-outline-primary btn-sm" onClick={() => setSelectedApp(app)}>View</button>
                   <button className="btn btn-outline-secondary btn-sm" onClick={() => handleLoadDocuments(app)}>Documents</button>
-                  <button className="btn btn-outline-success btn-sm" onClick={() => exportApplication(app, "csv")}>CSV</button>
                   <button className="btn btn-outline-danger btn-sm" onClick={() => exportApplication(app, "pdf")}>PDF</button>
                 </div>
               </div>
